@@ -1,0 +1,6 @@
+@StrategoBackend_HostAddress = http://localhost:5261
+
+GET {{StrategoBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
