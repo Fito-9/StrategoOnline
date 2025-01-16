@@ -1,0 +1,61 @@
+.medieval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color:  #6b4b3d; /* Color marrón medieval */
+    color: #f9f4e3; /* Beige antiguo */
+    font-family: 'Cinzel', serif; /* Fuente medieval */
+    border-bottom: 3px solid #6b4b3d;
+  }
+  
+  .logo img {
+    height: 60px;
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-item {
+    text-decoration: none;
+    color: #f9f4e3;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+  }
+  
+  .nav-item:hover {
+    color: #d4af37; /* Dorado medieval */
+  }
+  
+  .user-actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .login-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #6b4b3d;
+    border: 2px solid #d4af37;
+    color: #f9f4e3;
+    padding: 8px 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  
+  .login-btn img {
+    height: 20px;
+  }
+  
+  .login-btn:hover {
+    background: #d4af37;
+    transform: scale(1.05);
+  }
+  
