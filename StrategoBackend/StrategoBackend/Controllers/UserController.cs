@@ -27,7 +27,7 @@ namespace StrategoBackend.Controllers
             return _dbContext.Users;
         }
 
-        [HttpPost("Registro")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto user)
         {
             if (_dbContext.Users.Any(User => User.Nickname == user.Nickname))
