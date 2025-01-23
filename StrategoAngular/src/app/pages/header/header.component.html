@@ -9,8 +9,11 @@
       <a routerLink="/jugar" class="nav-item">Jugar</a>
     </nav>
     <div class="user-actions">
-      <button class="login-btn">
-        <img src="assets/icons/login-icon.png" alt="Iniciar sesión"> Iniciar sesión
+      <button class="login-btn" *ngIf="!isLoggedIn" [routerLink]="'/login'">
+        <img src="assets/icons/login-icon.png" alt="Iniciar sesión" > Iniciar sesión
+      </button>
+      <button class="register-btn" *ngIf="!isLoggedIn" [routerLink]="'/register'">
+        <img src="assets/icons/register-icon.png" alt="Registrarse" > Iniciar sesión
       </button>
     </div>
   </header>

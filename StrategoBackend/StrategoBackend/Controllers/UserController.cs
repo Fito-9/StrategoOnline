@@ -6,7 +6,7 @@ using StrategoBackend.Models.Dto;
 using StrategoBackend.Recursos;
 using System.IdentityModel.Tokens.Jwt;
 namespace StrategoBackend.Controllers
-{
+{   
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
