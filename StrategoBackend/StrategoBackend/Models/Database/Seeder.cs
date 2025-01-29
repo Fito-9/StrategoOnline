@@ -23,7 +23,8 @@ namespace StrategoBackend.Models.Database
 
                     Nickname = "Eldestrozaabuelas69",
                     Password = PasswordHash.Hash("kkdvak"),
-                    Email = "fitoesgay@gayyy.gay"
+                    Email = "fitoesgay@gayyy.gay",
+                    Ruta = null
                 },
                 ];
             _context.Users.AddRange(users);

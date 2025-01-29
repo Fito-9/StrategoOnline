@@ -1,0 +1,79 @@
+/* Estilos para el contenedor de Register */
+.register-container {
+    background-color: #5c3b35fc; /* Fondo marrón medieval */
+    color: #f9f4e3; /* Texto beige antiguo */
+    font-family: 'Cinzel', serif;
+    border: 5px solid #6b4b3d; /* Borde marrón oscuro */
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  }
+  
+  .register-section {
+    text-align: center;
+  }
+  
+  .register-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #d4af37; /* Dorado medieval */
+    text-shadow: 2px 2px 4px #000;
+    margin-bottom: 20px;
+  }
+  
+  .register-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  
+  .register-input-group label {
+    font-size: 1.2rem;
+    color: #d4af37; /* Dorado medieval */
+    margin-bottom: 5px;
+  }
+  
+  .register-input-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 2px solid #d4af37; /* Borde dorado */
+    border-radius: 10px;
+    background-color: #6b4b3d; /* Fondo marrón oscuro */
+    color: #f9f4e3; /* Texto beige antiguo */
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.4);
+  }
+  
+  .register-input-group input::placeholder {
+    color: #bfa033; /* Dorado más claro */
+  }
+  
+  .register-button {
+    display: inline-block;
+    background-color: #d4af37; /* Botón dorado medieval */
+    color: #4a2c2a; /* Texto marrón oscuro */
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .register-button:hover {
+    background-color: #bfa033; /* Dorado más oscuro */
+    transform: scale(1.05);
+  }
+  
+  .password-requirements {
+    font-size: 0.9rem;
+    color: #f9f4e3;
+    margin-top: 15px;
+    text-align: left;
+  }
+  

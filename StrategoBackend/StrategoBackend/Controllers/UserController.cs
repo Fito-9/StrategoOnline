@@ -26,13 +26,33 @@ namespace StrategoBackend.Controllers
         {
             return _dbContext.Users;
         }
-
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterDto user)
+        public async Task<IActionResult> Register([FromForm] UserRegisterDto user, [FromForm] IFormFile? avatar)
         {
-            if (_dbContext.Users.Any(User => User.Nickname == user.Nickname))
+            if (_dbContext.Users.Any(u => u.Nickname == user.Nickname))
             {
                 return BadRequest("El nombre del usuario ya está en uso");
+            }
+
+            string? avatarPath = null;
+
+            // Subir el archivo si existe
+            if (avatar != null && avatar.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                string uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                avatarPath = Path.Combine("uploads", uniqueFileName); // Ruta relativa
+                string fullPath = Path.Combine(uploadsFolder, uniqueFileName); // Ruta completa
+
+                using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await avatar.CopyToAsync(fileStream);
+                }
             }
 
             User newUser = new User()
@@ -40,29 +60,16 @@ namespace StrategoBackend.Controllers
                 Nickname = user.Nickname,
                 Email = user.Email,
                 Password = PasswordHash.Hash(user.Password),
-              
+                Ruta = avatarPath // Guardar la ruta del avatar (o null si no hay archivo)
             };
 
             await _dbContext.Users.AddAsync(newUser);
             await _dbContext.SaveChangesAsync();
-            UserRegisterDto userCreated = ToDto(newUser);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Expires = DateTime.UtcNow.AddDays(5),
-                SigningCredentials = new SigningCredentials(
-          _tokenParameters.IssuerSigningKey,
-          SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            string accessToken = tokenHandler.WriteToken(token);
-
-            return Ok(new { StringToken = accessToken });
+            return Ok(new { Message = "Usuario registrado con éxito", Ruta = avatarPath });
         }
-
-        [HttpPost("login")]
+    
+    [HttpPost("login")]
         public IActionResult Login([FromBody] UserLoginDto userLoginDto)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Email == userLoginDto.Email);
