@@ -1,0 +1,17 @@
+<div class="login-container">
+    <div class="login-section">
+      <h2 class="login-title">Iniciar Sesión</h2>
+      <form (ngSubmit)="submit()">
+        <div class="login-input-group">
+          <label for="Email">Email:</label>
+          <input type="Email" id="Email" [(ngModel)]="Email" name="email" required>
+        </div>
+        <div class="login-input-group">
+          <label for="password">Password:</label>
+          <input type="Password" id="Password" [(ngModel)]="Password" name="Password" required>
+        </div>
+        <button type="submit" class="login-button">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+  

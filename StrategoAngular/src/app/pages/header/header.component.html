@@ -1,1 +1,20 @@
-<p>header works!</p>
+<header class="medieval-header">
+    <div class="logo">
+      <a routerLink="/">
+        <img src="../../../assets/favicon.ico" alt="Medieval Logo">
+      </a>
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/" class="nav-item">Inicio</a>
+      <a routerLink="/jugar" class="nav-item">Jugar</a>
+    </nav>
+    <div class="user-actions">
+      <button class="login-btn" *ngIf="!isLoggedIn" [routerLink]="'/login'">
+        <img src="../../../assets/loginStratego.png" alt="Iniciar sesión" > Iniciar sesión
+      </button>
+      <button class="register-btn" *ngIf="!isLoggedIn" [routerLink]="'/register'">
+        <img src="../../../assets/registro.png" alt="Registrarse" > Iniciar sesión
+      </button>
+    </div>
+  </header>
+  

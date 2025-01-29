@@ -1,0 +1,10 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-image: url('../assets/background.png');
+    background-size: cover; /* Ajusta la imagen para que ocupe toda la pantalla */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    background-attachment: fixed; /* Mantiene el fondo fijo al hacer scroll */
+    background-position: center; /* Centra la imagen */
+  }
+  
