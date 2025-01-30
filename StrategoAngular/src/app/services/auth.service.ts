@@ -5,6 +5,9 @@ import { tap } from 'rxjs/operators';
 import { AuthRequest } from '../models/auth-request';
 import { AuthResponse } from '../models/auth-response';
 import { environment } from '../../environments/environment';
+import { Result } from '../models/result';
+import { ApiService } from './api.service';
+import { User } from '../models/User';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +18,7 @@ export class AuthService {
     //Behavior Subject es para que actualize el header nada más iniciar sesion para que salga el botón del usuario y el botón admin
   private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private api: ApiService) {}
 //mira si tiene token
   private hasToken(): boolean {
     return !!localStorage.getItem('accessToken');
@@ -42,6 +45,10 @@ export class AuthService {
         this.loggedIn.next(true);
       })
     );
+  }
+
+  async getUsers(): Promise<Result<User[]>> {
+    return this.api.get<User[]>(`${this.URL}/api/User`);
   }
   
 
