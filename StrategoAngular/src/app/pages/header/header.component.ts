@@ -12,12 +12,16 @@ import { CommonModule } from '@angular/common';
 })
 export class HeaderComponent implements OnInit{
   isLoggedIn: boolean = false;
+  userAvatar: string | null = null;
 
   constructor(private authService: AuthService) {}
   ngOnInit(): void {
     this.authService.isLoggedIn.subscribe(loggedIn => {
       this.isLoggedIn = loggedIn;
+      if (loggedIn) {
+        this.userAvatar = localStorage.getItem('UserAvatar'); // Cargar imagen desde localStorage
+      }
     });
-  }
+  }  
 
 }

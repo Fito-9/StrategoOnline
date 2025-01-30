@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<MyDbContext>();
+builder.Services.AddScoped<UnitOfWork>();
 
 builder.Services.AddSingleton(provider =>
 {
@@ -34,7 +35,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthentication().AddJwtBearer();
 
-var app = builder.Build();
 
 static async Task InitDatabaseAsync(IServiceProvider serviceProvider)
 {
@@ -48,11 +48,22 @@ static async Task InitDatabaseAsync(IServiceProvider serviceProvider)
     }
 }
 
+var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads")),
+    RequestPath = "/uploads"
+});
 
 app.UseHttpsRedirection();
 

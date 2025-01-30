@@ -13,8 +13,11 @@
         <img src="../../../assets/loginStratego.png" alt="Iniciar sesión" > Iniciar sesión
       </button>
       <button class="register-btn" *ngIf="!isLoggedIn" [routerLink]="'/register'">
-        <img src="../../../assets/registro.png" alt="Registrarse" > Iniciar sesión
+        <img src="../../../assets/registro.png" alt="Registrarse" > Registrarse
       </button>
+      <div *ngIf="isLoggedIn" class="user-avatar-container">
+        <img *ngIf="userAvatar" [src]="userAvatar" alt="Avatar" class="user-avatar">
+      </div>
     </div>
   </header>
   

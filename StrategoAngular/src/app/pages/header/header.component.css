@@ -75,3 +75,16 @@ header.medieval-header {
 .register-btn img:hover {
   transform: scale(1.2);
 }
+.user-avatar-container {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.user-avatar {
+  width: 70px; /* Tamaño del avatar */
+  height: 70px;
+  border-radius: 50%; /* Hace que la imagen sea circular */
+  object-fit: cover;
+  border: 2px solid white;
+}
