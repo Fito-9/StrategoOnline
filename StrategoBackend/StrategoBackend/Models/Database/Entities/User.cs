@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
 namespace StrategoBackend.Models.Database.Entities
 {
     public class User
     {
+        [Key]
         public int UserId { get; set; }
 
         [MaxLength(100)]
@@ -16,10 +19,10 @@ namespace StrategoBackend.Models.Database.Entities
         public string Email { get; set; }
         public string? Ruta { get; set; }
 
-        // Colección de amistades enviadas
-        public ICollection<Friendship> SentFriendships { get; set; }
+        [InverseProperty("Sender")]
+        public ICollection<Friendship> SentFriendships { get; set; } = new List<Friendship>();
 
-        // Colección de amistades recibidas
-        public ICollection<Friendship> ReceivedFriendships { get; set; }
+        [InverseProperty("Receiver")]
+        public ICollection<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();
     }
 }

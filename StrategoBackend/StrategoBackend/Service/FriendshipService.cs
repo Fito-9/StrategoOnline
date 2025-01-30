@@ -35,10 +35,16 @@ namespace StrategoBackend.Services
             return _friendshipRepository.GetPendingRequests(userId);
         }
 
-        // Nuevo método SendFriendRequest
+        public async Task RejectFriendRequest(int senderId, int receiverId)
+        {
+            await _friendshipRepository.RejectFriendRequest(senderId, receiverId);
+        }
+
+
+
         public async Task SendFriendRequest(int senderId, int receiverId)
         {
-            // Aquí puedes agregar lógica adicional si es necesario, como verificar si los usuarios ya son amigos o si ya existe una solicitud pendiente.
+          
             var friendship = new Friendship
             {
                 SenderId = senderId,
