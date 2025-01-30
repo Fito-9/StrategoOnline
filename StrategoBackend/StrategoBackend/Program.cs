@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<MyDbContext>();
+builder.Services.AddScoped<UnitOfWork>();
 
 builder.Services.AddSingleton(provider =>
 {
@@ -34,7 +35,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthentication().AddJwtBearer();
 
-var app = builder.Build();
 
 static async Task InitDatabaseAsync(IServiceProvider serviceProvider)
 {
@@ -47,6 +47,8 @@ static async Task InitDatabaseAsync(IServiceProvider serviceProvider)
         seeder.Seed();
     }
 }
+
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {

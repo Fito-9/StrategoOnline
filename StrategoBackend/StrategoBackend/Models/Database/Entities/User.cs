@@ -14,8 +14,6 @@ namespace StrategoBackend.Models.Database.Entities
 
         [MaxLength(100)]
         public string Email { get; set; }
-
-        [MaxLength(255)]
         public string? Ruta { get; set; } 
     }
 }

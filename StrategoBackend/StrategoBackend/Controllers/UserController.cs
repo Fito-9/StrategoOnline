@@ -5,14 +5,15 @@ using StrategoBackend.Models.Database.Entities;
 using StrategoBackend.Models.Dto;
 using StrategoBackend.Recursos;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+
 namespace StrategoBackend.Controllers
-{   
+{
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
-        private MyDbContext _dbContext;
-        private readonly PasswordHash passwordHash;
+        private readonly MyDbContext _dbContext;
         private readonly TokenValidationParameters _tokenParameters;
 
         public UserController(MyDbContext dbContext, TokenValidationParameters tokenParameters)
@@ -26,89 +27,72 @@ namespace StrategoBackend.Controllers
         {
             return _dbContext.Users;
         }
-        [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromForm] UserRegisterDto user, [FromForm] IFormFile? avatar)
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] UserRegisterDto userDto)
         {
-            if (_dbContext.Users.Any(u => u.Nickname == user.Nickname))
-            {
+            if (_dbContext.Users.Any(u => u.Nickname == userDto.Nickname))
                 return BadRequest("El nombre del usuario ya está en uso");
-            }
 
             string? avatarPath = null;
-
-            // Subir el archivo si existe
-            if (avatar != null && avatar.Length > 0)
+            if (userDto.Ruta != null && userDto.Ruta.Length > 0)
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
                 if (!Directory.Exists(uploadsFolder))
-                {
                     Directory.CreateDirectory(uploadsFolder);
-                }
 
-                string uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
-                avatarPath = Path.Combine("uploads", uniqueFileName); // Ruta relativa
-                string fullPath = Path.Combine(uploadsFolder, uniqueFileName); // Ruta completa
+                string uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(userDto.Ruta.FileName)}";
+                avatarPath = Path.Combine("uploads", uniqueFileName);
+                string fullPath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var fileStream = new FileStream(fullPath, FileMode.Create))
                 {
-                    await avatar.CopyToAsync(fileStream);
+                    await userDto.Ruta.CopyToAsync(fileStream);
                 }
             }
 
-            User newUser = new User()
+            var newUser = new User
             {
-                Nickname = user.Nickname,
-                Email = user.Email,
-                Password = PasswordHash.Hash(user.Password),
-                Ruta = avatarPath // Guardar la ruta del avatar (o null si no hay archivo)
+                Nickname = userDto.Nickname,
+                Email = userDto.Email,
+                Password = PasswordHash.Hash(userDto.Password),
+                Ruta = avatarPath // Guarda la ruta en la base de datos
             };
 
             await _dbContext.Users.AddAsync(newUser);
             await _dbContext.SaveChangesAsync();
 
-            return Ok(new { Message = "Usuario registrado con éxito", Ruta = avatarPath });
+            return Ok(new { Message = "Usuario registrado con éxito", Avatar = avatarPath });
         }
-    
-    [HttpPost("login")]
+
+        [HttpPost("login")]
         public IActionResult Login([FromBody] UserLoginDto userLoginDto)
         {
             var user = _dbContext.Users.FirstOrDefault(u => u.Email == userLoginDto.Email);
             if (user == null)
-            {
                 return Unauthorized("Usuario no existe");
-            }
 
             if (!PasswordHash.Hash(userLoginDto.Password).Equals(user.Password))
-            {
                 return Unauthorized("Contraseña incorrecta");
-            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-               
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Name, user.Nickname)
+                }),
                 Expires = DateTime.UtcNow.AddDays(5),
                 SigningCredentials = new SigningCredentials(
                     _tokenParameters.IssuerSigningKey,
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            string accessToken = tokenHandler.WriteToken(token);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var accessToken = tokenHandler.WriteToken(token);
 
-            return Ok(new { StringToken = accessToken, user.UserId });
-        }
-        private UserRegisterDto ToDto(User users)
-        {
-            return new UserRegisterDto()
-            {
-                UserId = users.UserId,
-                Nickname = users.Nickname,
-                Email = users.Email,
-                Password = users.Password,
-            };
+            return Ok(new { AccessToken = accessToken, UserId = user.UserId });
         }
     }
-
-    
 }
