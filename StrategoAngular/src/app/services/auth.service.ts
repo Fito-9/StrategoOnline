@@ -47,8 +47,8 @@ export class AuthService {
     );
   }
 
-  async getUsers(): Promise<Result<User[]>> {
-    return this.api.get<User[]>(`${this.URL}/api/User`);
+  async getUsers(): Promise<Observable<User[]>> {
+    return this.http.get<User[]>(`${this.URL}/api/User`);
   }
   
 

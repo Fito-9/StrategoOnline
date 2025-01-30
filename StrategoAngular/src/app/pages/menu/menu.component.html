@@ -1,10 +1,16 @@
-<div class="menu-container">
-  <h2>Amistades</h2>
-  <ul>
-    <li *ngFor="let friendship of friendships">
-      <span>{{ friendship.senderId === userId ? 'Enviado a' : 'Recibido de' }} Usuario {{ friendship.senderId === userId ? friendship.receiverId : friendship.senderId }}</span>
-      <button *ngIf="!friendship.isAccepted" (click)="acceptFriendship(friendship.friendshipId)">Aceptar</button>
-      <button *ngIf="!friendship.isAccepted" (click)="rejectFriendship(friendship.friendshipId)">Rechazar</button>
-    </li>
-  </ul>
-</div>
+<div class="container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="searchUsers()"
+      placeholder="Buscar usuarios..."
+      class="search-input"
+    />
+  
+    <ul class="user-list">
+      <li *ngFor="let user of filteredUsers">
+        {{ user.nickname }}
+        <button (click)="sendFriendRequest(user.userId)">Añadir amigo</button>
+      </li>
+    </ul>
+  </div>
