@@ -1,5 +1,5 @@
 export interface AuthResponse {
-    stringToken: string;  
-    UserId: number;   
-  }
-  
+  accessToken: string;
+  userId: number;
+  avatar?: string; 
+}

@@ -25,19 +25,26 @@ export class AuthService {
     return this.loggedIn.asObservable();
   }
 
-  register(authData: AuthRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.URL}User/Register`, authData);
+  register(authData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.URL}User/Register`, authData);
   }
-
+  
   login(authData: AuthRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.URL}User/login`, authData).pipe(
       tap((response: AuthResponse) => {
-        localStorage.setItem('accessToken', response.stringToken);
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('UserId', response.userId.toString());
+        
+        if (response.avatar) {
+          localStorage.setItem('UserAvatar', response.avatar);
+        }
+  
         this.loggedIn.next(true);
       })
     );
   }
-//lógica del log out
+  
+
   logout(): void {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('UserId');

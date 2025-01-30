@@ -79,9 +79,9 @@ namespace StrategoBackend.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                    new Claim(ClaimTypes.Name, user.Nickname)
-                }),
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Name, user.Nickname)
+        }),
                 Expires = DateTime.UtcNow.AddDays(5),
                 SigningCredentials = new SigningCredentials(
                     _tokenParameters.IssuerSigningKey,
@@ -92,7 +92,12 @@ namespace StrategoBackend.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var accessToken = tokenHandler.WriteToken(token);
 
-            return Ok(new { AccessToken = accessToken, UserId = user.UserId });
+            string avatarUrl = string.IsNullOrEmpty(user.Ruta)
+                ? null
+                : $"{Request.Scheme}://{Request.Host}/" + user.Ruta;
+
+            return Ok(new { AccessToken = accessToken, UserId = user.UserId, Avatar = avatarUrl });
         }
+
     }
 }
