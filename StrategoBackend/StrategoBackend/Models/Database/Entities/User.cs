@@ -14,6 +14,12 @@ namespace StrategoBackend.Models.Database.Entities
 
         [MaxLength(100)]
         public string Email { get; set; }
-        public string? Ruta { get; set; } 
+        public string? Ruta { get; set; }
+
+        // Colección de amistades enviadas
+        public ICollection<Friendship> SentFriendships { get; set; }
+
+        // Colección de amistades recibidas
+        public ICollection<Friendship> ReceivedFriendships { get; set; }
     }
 }
