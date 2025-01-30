@@ -22,9 +22,8 @@ namespace StrategoBackend.Models.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración de la relación de clave foránea entre Friendship y User (Sender)
             modelBuilder.Entity<Friendship>()
-                .HasOne(f => f.Sender) // Relación con el User que es el Sender
+                .HasOne(f => f.Sender)
                 .WithMany(u => u.SentFriendships) // Un Usuario puede ser el 'Sender' en muchas amistades
                 .HasForeignKey(f => f.SenderId) // La clave foránea es SenderId
                 .OnDelete(DeleteBehavior.Restrict); // Evitar eliminación en cascada
