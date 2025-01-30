@@ -40,6 +40,17 @@ namespace StrategoBackend.Models.Database
                 .Select(f => f.SenderId == userId ? f.Receiver : f.Sender)
                 .ToListAsync();
         }
+        public async Task RejectFriendRequest(int senderId, int receiverId)
+        {
+            var friendship = await _dbContext.Friendships
+                .FirstOrDefaultAsync(f => f.SenderId == senderId && f.ReceiverId == receiverId && !f.IsAccepted);
+
+            if (friendship != null)
+            {
+                _dbContext.Friendships.Remove(friendship);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
 
         public async Task<List<Friendship>> GetPendingRequests(int userId)
         {

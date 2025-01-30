@@ -30,6 +30,14 @@ namespace StrategoBackend.Controllers
             return Ok(new { Message = "Solicitud de amistad aceptada" });
         }
 
+        [HttpPost("reject-request")]
+        public async Task<IActionResult> RejectFriendRequest([FromBody] FriendRequestDto request)
+        {
+            await _friendshipService.RejectFriendRequest(request.SenderId, request.ReceiverId);
+            return Ok(new { Message = "Solicitud de amistad rechazada" });
+        }
+
+
         [HttpGet("friends/{userId}")]
         public async Task<IActionResult> GetFriends(int userId)
         {
