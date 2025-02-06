@@ -16,10 +16,8 @@ namespace StrategoBackend.Models.Database.Entities
 
         public bool IsAccepted { get; set; } = false;
 
-        // Relación con el usuario que envió la solicitud
         public User Sender { get; set; }
 
-        // Relación con el usuario que recibió la solicitud
         public User Receiver { get; set; }
     }
 }

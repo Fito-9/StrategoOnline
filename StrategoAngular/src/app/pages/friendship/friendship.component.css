@@ -1,0 +1,88 @@
+/* src/app/components/friendship-menu/friendship-menu.component.css */
+.principal-container {
+  padding: 20px;
+  background-color: #5c3b35fc;
+  color: #f9f4e3;
+  font-family: 'Cinzel', serif;
+  text-align: center;
+  border: 5px solid #6b4b3d;
+  border-radius: 15px;
+  margin: 20px auto;
+  max-width: 800px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.game-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #d4af37;
+  text-shadow: 2px 2px 4px #000;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.2rem;
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  background-color: #6b4b3d;
+  color: #f9f4e3;
+}
+
+.user-list, .request-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.user-list li, .request-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background-color: #6b4b3d;
+}
+
+.user-info, .request-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #d4af37;
+}
+
+.friend-request-button, .accept-button, .reject-button, .view-profile-button {
+  background-color: #d4af37;
+  color: #4a2c2a;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.friend-request-button:hover, .accept-button:hover, .reject-button:hover, .view-profile-button:hover {
+  background-color: #bfa033;
+}
+
+.request-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.already-friends {
+  font-style: italic;
+  color: #f9f4e3;
+}
