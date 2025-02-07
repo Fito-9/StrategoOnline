@@ -2,6 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using StrategoBackend;
 using StrategoBackend.Models.Database;
 using StrategoBackend.Services;
+using StrategoBackend.WebSockets;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,14 +11,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Registrar el contexto de la base de datos y repositorios
+builder.Services.AddSingleton<WebSocketNetwork>();
+builder.Services.AddTransient<WebSocketMiddleware>();
 builder.Services.AddScoped<MyDbContext>();
 builder.Services.AddScoped<UnitOfWork>();
 
-// Registrar el servicio FriendshipService
 builder.Services.AddScoped<FriendshipService>();
 
-// Registrar repositorios relacionados, como IFriendshipRepository
 builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
 
 builder.Services.AddSingleton(provider =>
@@ -77,6 +77,9 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseWebSockets();    
+app.UseMiddleware<WebSocketMiddleware>();
 
 app.MapControllers();
 await InitDatabaseAsync(app.Services);

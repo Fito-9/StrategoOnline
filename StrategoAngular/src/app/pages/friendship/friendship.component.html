@@ -1,4 +1,3 @@
-<!-- src/app/components/friendship-menu/friendship-menu.component.html -->
 <div class="principal-container">
   <h2 class="game-title">Buscar Usuarios</h2>
   <input
@@ -17,7 +16,12 @@
           <img src="assets/default-avatar.png" alt="Sin avatar" class="user-avatar">
         </ng-template>
         <span>{{ user.nickname }}</span>
+
+        <!-- Estado de conexión -->
+        <span *ngIf="isOnline(user.userId)" class="status online">🟢 Conectado</span>
+        <span *ngIf="!isOnline(user.userId)" class="status offline">🔴 Desconectado</span>
       </div>
+
       <!-- Si el usuario ya es amigo, no mostramos el botón -->
       <button *ngIf="!friendIds.includes(user.userId)" (click)="sendFriendRequest(user.userId)" class="friend-request-button">
         Enviar solicitud
@@ -35,7 +39,12 @@
           <img src="assets/default-avatar.png" alt="Sin avatar" class="user-avatar">
         </ng-template>
         <span>{{ req.senderNickname }}</span>
+
+        <!-- Estado de conexión de la persona que envió la solicitud -->
+        <span *ngIf="isOnline(req.senderId)" class="status online">🟢 Conectado</span>
+        <span *ngIf="!isOnline(req.senderId)" class="status offline">🔴 Desconectado</span>
       </div>
+
       <div class="request-actions">
         <button (click)="acceptRequest(req.senderId)" class="accept-button">Aceptar</button>
         <button (click)="rejectRequest(req.senderId)" class="reject-button">Rechazar</button>

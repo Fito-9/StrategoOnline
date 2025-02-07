@@ -8,6 +8,7 @@
   import { Result } from '../models/result';
   import { ApiService } from './api.service';
   import { User } from '../models/User';
+import { WebsocketService } from './websocket.service';
 
   @Injectable({
     providedIn: 'root'
@@ -18,7 +19,7 @@
       //Behavior Subject es para que actualize el header nada más iniciar sesion para que salga el botón del usuario y el botón admin
     private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
 
-    constructor(private http: HttpClient, private api: ApiService) {}
+    constructor(private http: HttpClient, private api: ApiService, private websocketService: WebsocketService) {}
   //mira si tiene token
     private hasToken(): boolean {
       return !!localStorage.getItem('accessToken');
@@ -43,6 +44,7 @@
           }
     
           this.loggedIn.next(true);
+          this.websocketService.connect();
         })
       );
     }
@@ -56,6 +58,7 @@
       localStorage.removeItem('accessToken');
       localStorage.removeItem('UserId');
       this.loggedIn.next(false);
+      this.websocketService.disconnect();
     }
   //consigue los datos del token
     getUserDataFromToken(): any {
