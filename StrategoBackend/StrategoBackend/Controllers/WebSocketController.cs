@@ -44,6 +44,12 @@ namespace StrategoBackend.Controllers
 
             return Ok();
         }
+        [HttpGet("online-users")]
+        public IActionResult GetOnlineUsers()
+        {
+            var onlineUsers = _webSocketNetwork.GetConnectedUsers();
+            return Ok(onlineUsers); // Devuelve la lista de IDs de los usuarios conectados
+        }
 
         private int? GetUserIdFromToken(string token)
         {

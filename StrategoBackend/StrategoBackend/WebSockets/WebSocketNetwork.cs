@@ -65,7 +65,10 @@ public class WebSocketNetwork
 
         _semaphore.Release();
     }
-
+    public List<int> GetConnectedUsers()
+    {
+        return _connectedUsers.Keys.ToList(); // Devuelve una lista de userIds conectados
+    }
     public bool IsUserConnected(int userId)
     {
         return _connectedUsers.ContainsKey(userId);
