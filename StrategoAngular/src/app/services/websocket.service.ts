@@ -66,13 +66,13 @@ export class WebsocketService {
     if (message.startsWith('Conectado:')) {
       const userId = parseInt(message.split(' ')[1], 10);
       this.connectedUsers.add(userId);
-      this.onlineUsers$.next(new Set(this.connectedUsers));
     } 
     else if (message.startsWith('Desconectado:')) {
       const userId = parseInt(message.split(' ')[1], 10);
       this.connectedUsers.delete(userId);
-      this.onlineUsers$.next(new Set(this.connectedUsers));
     }
+
+    this.onlineUsers$.next(new Set(this.connectedUsers)); // 🔥 Notificar cambios en usuarios conectados
   }
 
   getOnlineUsers(): Set<number> {

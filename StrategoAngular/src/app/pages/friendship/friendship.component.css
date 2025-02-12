@@ -86,3 +86,16 @@
   font-style: italic;
   color: #f9f4e3;
 }
+
+.online-status {
+  color: green;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.offline-status {
+  color: red;
+  font-weight: bold;
+  margin-left: 10px;
+}
+

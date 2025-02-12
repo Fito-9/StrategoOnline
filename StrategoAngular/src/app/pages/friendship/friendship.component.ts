@@ -18,9 +18,8 @@ export class FriendshipComponent implements OnInit{
   users: User[] = [];
   filteredUsers: User[] = [];
   searchTerm: string = '';
-  onlineUsers: Set<number> = new Set();
+
   pendingRequests: FriendRequestDto[] = [];
-  friends: User[] = [];
   friendIds: number[] = []; // IDs de usuarios que ya son amigos
 
   currentUserId: number = 0;
@@ -39,21 +38,22 @@ export class FriendshipComponent implements OnInit{
     this.loadUsers();
     this.loadPendingRequests();
     this.loadFriends();
+  
+    // 🔥 Suscribirse a cambios en usuarios en línea
     this.websocketService.onlineUsers$.subscribe(onlineUsers => {
-      this.onlineUsers = onlineUsers;
+      this.users.forEach(user => {  
+        user.isOnline = onlineUsers.has(user.userId);
+      });
     });
   }
+  
 
   loadUsers(): void {
     this.userService.getUsers().subscribe(users => {
       this.users = users.filter(user => user.userId !== this.currentUserId);
       this.filteredUsers = [...this.users];
     });
-  }
-
-  isOnline(userId: number): boolean {
-    return this.onlineUsers.has(userId);
-  }
+  } 
 
   loadPendingRequests(): void {
     this.friendshipService.getPendingRequests(this.currentUserId).subscribe(requests => {
@@ -62,11 +62,19 @@ export class FriendshipComponent implements OnInit{
   }
 
   loadFriends(): void {
-    const currentUserId = parseInt(localStorage.getItem('UserId')!, 10);
-    this.friendshipService.getFriends(currentUserId).subscribe(friends => {
-      this.friends = friends;
+    this.friendshipService.getFriends(this.currentUserId).subscribe(friends => {
+      this.friendIds = friends.map(friend => friend.userId);
+      
+      
+      friends.forEach(friend => {
+        friend.isOnline = this.websocketService.getOnlineUsers().has(friend.userId);
+      });
+  
+      this.users = friends; 
     });
   }
+  
+  
 
   searchUsers(): void {
     this.filteredUsers = this.users.filter(user =>

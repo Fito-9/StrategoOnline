@@ -3,5 +3,6 @@ export interface User {
     nickname: string;
     email: string;
     ruta?: string; 
+    isOnline?: boolean;
   }
   

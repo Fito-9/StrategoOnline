@@ -1,69 +1,73 @@
 ﻿using System.Net.WebSockets;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace StrategoBackend.WebSockets;
 
-    public class WebSocketNetwork
+public class WebSocketNetwork
 {
-    // Contador para asignar un ID único a cada conexión
-    private static int _idCounter = 1;
+    private readonly Dictionary<int, WebSocketHandler> _connectedUsers = new(); // Mapea userId a WebSocketHandler
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    // Lista de handlers activos
-    private readonly List<WebSocketHandler> _handlers = new List<WebSocketHandler>();
-
-    // Semáforo para acceso seguro a la lista
-    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-
-    public async Task HandleAsync(WebSocket webSocket)
+    public async Task HandleAsync(WebSocket webSocket, int userId)
     {
-        // Creamos y agregamos el handler
-        WebSocketHandler handler = await AddHandlerAsync(webSocket);
+        WebSocketHandler handler = await AddHandlerAsync(webSocket, userId);
 
-        // Notificar a todos los usuarios conectados que se ha conectado un nuevo usuario
-        await NotifyUserConnectedAsync(handler);
+        await NotifyUserConnectedAsync(userId);
 
-        // Manejar la conexión (leer mensajes, etc.)
         await handler.HandleAsync();
 
-        // Cuando se desconecta, removemos el handler y notificamos
-        await RemoveHandlerAsync(handler);
+        await RemoveHandlerAsync(userId);
     }
 
-    private async Task<WebSocketHandler> AddHandlerAsync(WebSocket webSocket)
+    private async Task<WebSocketHandler> AddHandlerAsync(WebSocket webSocket, int userId)
     {
         await _semaphore.WaitAsync();
-        var handler = new WebSocketHandler(_idCounter, webSocket);
-        _handlers.Add(handler);
-        _idCounter++;
+
+        var handler = new WebSocketHandler(userId, webSocket);
+        _connectedUsers[userId] = handler;
+
         _semaphore.Release();
         return handler;
     }
 
-    private async Task RemoveHandlerAsync(WebSocketHandler handler)
+    private async Task RemoveHandlerAsync(int userId)
     {
         await _semaphore.WaitAsync();
-        _handlers.Remove(handler);
+
+        if (_connectedUsers.ContainsKey(userId))
+        {
+            _connectedUsers.Remove(userId);
+            await NotifyUserDisconnectedAsync(userId);
+        }
+
         _semaphore.Release();
-        await NotifyUserDisconnectedAsync(handler);
     }
 
-    private Task NotifyUserConnectedAsync(WebSocketHandler newHandler)
+    private async Task NotifyUserConnectedAsync(int userId)
     {
-        // Envía un mensaje a todos los conectados
-        string message = $"Conectado: {newHandler.Id}";
-        return BroadcastMessageAsync(message);
+        string message = $"Conectado: {userId}";
+        await BroadcastMessageAsync(message);
     }
 
-    private Task NotifyUserDisconnectedAsync(WebSocketHandler handler)
+    private async Task NotifyUserDisconnectedAsync(int userId)
     {
-        string message = $"Desconectado: {handler.Id}";
-        return BroadcastMessageAsync(message);
+        string message = $"Desconectado: {userId}";
+        await BroadcastMessageAsync(message);
     }
 
-    public async Task BroadcastMessageAsync(string message)
+    private async Task BroadcastMessageAsync(string message)
     {
         await _semaphore.WaitAsync();
-        var tasks = _handlers.Select(h => h.SendAsync(message));
+
+        var tasks = _connectedUsers.Values.Select(handler => handler.SendAsync(message));
         await Task.WhenAll(tasks);
+
         _semaphore.Release();
+    }
+
+    public bool IsUserConnected(int userId)
+    {
+        return _connectedUsers.ContainsKey(userId);
     }
 }
