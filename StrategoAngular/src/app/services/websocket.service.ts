@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class WebsocketService {
   public connected$ = new BehaviorSubject<boolean>(false);
   public onlineUsers$ = new BehaviorSubject<Set<number>>(new Set());
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   connect(): void {
     const token = localStorage.getItem('accessToken');
@@ -77,5 +78,14 @@ export class WebsocketService {
 
   getOnlineUsers(): Set<number> {
     return this.connectedUsers;
+  }
+
+  fetchOnlineUsers(): void {
+    this.http.get<number[]>(`${environment.apiUrl}/socket/online-users`).subscribe(onlineUsers => {
+      this.connectedUsers = new Set(onlineUsers);
+      this.onlineUsers$.next(this.connectedUsers);
+    }, error => {
+      console.error("Error obteniendo usuarios conectados:", error);
+    });
   }
 }
