@@ -3,7 +3,7 @@ import { HeaderComponent } from './pages/header/header.component';
 import { MainComponent } from './pages/main/main.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
-import { MenuComponent } from './pages/menu/menu.component';
+import { FriendshipComponent } from './pages/friendship/friendship.component';
 
 export const routes: Routes = [
 
@@ -24,7 +24,7 @@ export const routes: Routes = [
         component: RegisterComponent
     },
     {
-        path:'menu',
-        component: MenuComponent
+        path: 'friendship',
+        component: FriendshipComponent
     }
 ];

@@ -1,32 +1,49 @@
-// friendship.service.ts
+// src/app/services/friendship.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { User } from '../models/User';
 
-interface Friendship {
-  friendshipId: number;
+export interface FriendRequestDto {
   senderId: number;
   receiverId: number;
-  isAccepted: boolean;
+  senderNickname?: string;
+  senderAvatar?: string;
+}
+
+export interface FriendRequestResponse {
+  message: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class FriendshipService {
-  private apiUrl = 'https://localhost:5001/api/friendships';
+  private apiUrl = `${environment.apiUrl}Friendship`;
 
   constructor(private http: HttpClient) {}
 
-  getFriendships(userId: number): Observable<Friendship[]> {
-    return this.http.get<Friendship[]>(`${this.apiUrl}/user/${userId}`);
+  sendFriendRequest(senderId: number, receiverId: number): Observable<FriendRequestResponse> {
+    const body = { senderId, receiverId };
+    return this.http.post<FriendRequestResponse>(`${this.apiUrl}/send-request`, body);
   }
 
-  acceptFriendship(friendshipId: number): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/accept/${friendshipId}`, {});
+  getPendingRequests(userId: number): Observable<FriendRequestDto[]> {
+    return this.http.get<FriendRequestDto[]>(`${this.apiUrl}/pending-requests/${userId}`);
   }
 
-  rejectFriendship(friendshipId: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/reject/${friendshipId}`);
+  getFriends(userId: number): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/friends/${userId}`);
+  }
+
+  acceptFriendRequest(senderId: number, receiverId: number): Observable<FriendRequestResponse> {
+    const body = { senderId, receiverId };
+    return this.http.post<FriendRequestResponse>(`${this.apiUrl}/accept-request`, body);
+  }
+
+  rejectFriendRequest(senderId: number, receiverId: number): Observable<FriendRequestResponse> {
+    const body = { senderId, receiverId };
+    return this.http.post<FriendRequestResponse>(`${this.apiUrl}/reject-request`, body);
   }
 }

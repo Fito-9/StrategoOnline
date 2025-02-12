@@ -21,9 +21,9 @@ namespace StrategoBackend.Models.Database
                 [
                 new User {
 
-                    Nickname = "Eldestrozaabuelas69",
-                    Password = PasswordHash.Hash("kkdvak"),
-                    Email = "fitoesgay@gayyy.gay",
+                    Nickname = "Fito",
+                    Password = PasswordHash.Hash("kk"),
+                    Email = "fiin@gmail.com",
                     Ruta = null
                 },
                 ];

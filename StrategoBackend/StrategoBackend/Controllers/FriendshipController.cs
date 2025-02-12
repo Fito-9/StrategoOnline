@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StrategoBackend.Models.Dto;
 using StrategoBackend.Services;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace StrategoBackend.Controllers
 {
@@ -37,12 +38,28 @@ namespace StrategoBackend.Controllers
             return Ok(new { Message = "Solicitud de amistad rechazada" });
         }
 
-
         [HttpGet("friends/{userId}")]
         public async Task<IActionResult> GetFriends(int userId)
         {
             var friends = await _friendshipService.GetFriends(userId);
             return Ok(friends);
+        }
+
+        [HttpGet("pending-requests/{userId}")]
+        public async Task<IActionResult> GetPendingRequests(int userId)
+        {
+            var pendingFriendships = await _friendshipService.GetPendingRequests(userId);
+            var result = pendingFriendships.Select(fr => new FriendRequestDto
+            {
+                SenderId = fr.SenderId,
+                ReceiverId = fr.ReceiverId,
+                SenderNickname = fr.Sender?.Nickname ?? "Desconocido",
+                SenderAvatar = string.IsNullOrEmpty(fr.Sender?.Ruta)
+                                ? null
+                                : $"{Request.Scheme}://{Request.Host}/{fr.Sender.Ruta.Replace("\\", "/")}"
+            }).ToList();
+
+            return Ok(result);
         }
     }
 }

@@ -15,8 +15,10 @@
       <button class="register-btn" *ngIf="!isLoggedIn" [routerLink]="'/register'">
         <img src="../../../assets/registro.png" alt="Registrarse" > Registrarse
       </button>
-      <div *ngIf="isLoggedIn" class="user-avatar-container" [routerLink] = "'/menu'">
-        
+      <button class="login-btn" *ngIf="isLoggedIn" (click)="logout()">
+        <img src="../../../assets/loginStratego.png" alt="Iniciar sesión" > Cerrar Sesión
+      </button>
+      <div *ngIf="isLoggedIn" class="user-avatar-container" [routerLink]="'/friendship'">
         <img *ngIf="userAvatar" [src]="userAvatar" alt="Avatar" class="user-avatar">
       </div>
     </div>
