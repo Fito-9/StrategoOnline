@@ -38,9 +38,13 @@ export class FriendshipComponent implements OnInit{
     this.loadUsers();
     this.loadPendingRequests();
     this.loadFriends();
+  
 
+    this.websocketService.fetchOnlineUsers();
+  
+   
     this.websocketService.onlineUsers$.subscribe(onlineUsers => {
-      this.users.forEach(user => {  
+      this.users.forEach(user => {
         user.isOnline = onlineUsers.has(user.userId);
       });
     });
