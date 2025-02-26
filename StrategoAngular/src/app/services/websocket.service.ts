@@ -73,7 +73,7 @@ export class WebsocketService {
       this.connectedUsers.delete(userId);
     }
 
-    this.onlineUsers$.next(new Set(this.connectedUsers)); // 🔥 Notificar cambios en usuarios conectados
+    this.onlineUsers$.next(new Set(this.connectedUsers));
   }
 
   getOnlineUsers(): Set<number> {
