@@ -18,6 +18,7 @@ export class FriendshipComponent implements OnInit{
   users: User[] = [];
   filteredUsers: User[] = [];
   searchTerm: string = '';
+  onlineUserIds: Set<number> = new Set();
 
   pendingRequests: FriendRequestDto[] = [];
   friendIds: number[] = []; // IDs de usuarios que ya son amigos
@@ -35,20 +36,20 @@ export class FriendshipComponent implements OnInit{
     if (storedId) {
       this.currentUserId = parseInt(storedId, 10);
     }
+    if (!this.websocketService.connected$.getValue()) {
+      console.log('No hay conexión activa, reconectando...');
+      this.websocketService.connect();
+    }
     this.loadUsers();
     this.loadPendingRequests();
     this.loadFriends();
   
-
-    this.websocketService.fetchOnlineUsers();
   
-   
     this.websocketService.onlineUsers$.subscribe(onlineUsers => {
-      this.users.forEach(user => {
-        user.isOnline = onlineUsers.has(user.userId);
-      });
+      this.onlineUserIds = onlineUsers;
     });
   }
+  
   
 
   loadUsers(): void {

@@ -17,8 +17,9 @@
           <img src="assets/default-avatar.png" alt="Sin avatar" class="user-avatar">
         </ng-template>
         <span>{{ user.nickname }}</span>
-        <span *ngIf="user.isOnline" class="online-status">🟢 En línea</span>
-        <span *ngIf="!user.isOnline" class="offline-status">🔴 Desconectado</span>
+        <span *ngIf="onlineUserIds.has(user.userId)" class="online-status">🟢 En línea</span>
+        <span *ngIf="!onlineUserIds.has(user.userId)" class="offline-status">🔴 Desconectado</span>        
+        
       </div>
       
       <button *ngIf="!friendIds.includes(user.userId)" (click)="sendFriendRequest(user.userId)" class="friend-request-button">

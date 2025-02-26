@@ -1,76 +1,174 @@
-﻿using System.Net.WebSockets;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
+﻿
+using System.Net.WebSockets;
+using StrategoBackend.Models.Dto;
 
-namespace StrategoBackend.WebSockets;
-
-public class WebSocketNetwork
+namespace StrategoBackend.WebSockets
 {
-    private readonly Dictionary<int, WebSocketHandler> _connectedUsers = new(); // Mapea userId a WebSocketHandler
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-
-    public async Task HandleAsync(WebSocket webSocket, int userId)
+    public class WebSocketNetwork
     {
-        WebSocketHandler handler = await AddHandlerAsync(webSocket, userId);
+       
+        private readonly Dictionary<int, WebSocketHandler> _handlers = new Dictionary<int, WebSocketHandler>();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        await NotifyUserConnectedAsync(userId);
 
-        await handler.HandleAsync();
+        private readonly Queue<int> _matchmakingQueue = new Queue<int>();
 
-        await RemoveHandlerAsync(userId);
-    }
-
-    private async Task<WebSocketHandler> AddHandlerAsync(WebSocket webSocket, int userId)
-    {
-        await _semaphore.WaitAsync();
-
-        var handler = new WebSocketHandler(userId, webSocket);
-        _connectedUsers[userId] = handler;
-
-        _semaphore.Release();
-        return handler;
-    }
-
-    private async Task RemoveHandlerAsync(int userId)
-    {
-        await _semaphore.WaitAsync();
-
-        if (_connectedUsers.ContainsKey(userId))
+        public async Task HandleAsync(WebSocket webSocket, int userId)
         {
-            _connectedUsers.Remove(userId);
-            await NotifyUserDisconnectedAsync(userId);
+
+            WebSocketHandler handler = await AddHandlerAsync(webSocket, userId);
+
+            await BroadcastOnlineUsersAsync();
+
+            await handler.HandleAsync();
         }
 
-        _semaphore.Release();
-    }
+        private async Task<WebSocketHandler> AddHandlerAsync(WebSocket webSocket, int userId)
+        {
+            await _semaphore.WaitAsync();
+            var handler = new WebSocketHandler(userId, webSocket);
+            handler.MessageReceived += OnMessageReceivedAsync;
+            handler.Disconnected += OnDisconnectedAsync;
+            _handlers[userId] = handler;
+            _semaphore.Release();
+            return handler;
+        }
 
-    private async Task NotifyUserConnectedAsync(int userId)
-    {
-        string message = $"Conectado: {userId}";
-        await BroadcastMessageAsync(message);
-    }
+        private async Task OnDisconnectedAsync(WebSocketHandler handler)
+        {
+            await _semaphore.WaitAsync();
+            if (_handlers.ContainsKey(handler.UserId))
+            {
+                _handlers.Remove(handler.UserId);
 
-    private async Task NotifyUserDisconnectedAsync(int userId)
-    {
-        string message = $"Desconectado: {userId}";
-        await BroadcastMessageAsync(message);
-    }
+                RemoveFromMatchmakingQueue(handler.UserId);
+            }
+            _semaphore.Release();
 
-    private async Task BroadcastMessageAsync(string message)
-    {
-        await _semaphore.WaitAsync();
 
-        var tasks = _connectedUsers.Values.Select(handler => handler.SendAsync(message));
-        await Task.WhenAll(tasks);
+            await BroadcastOnlineUsersAsync();
+        }
 
-        _semaphore.Release();
-    }
-    public List<int> GetConnectedUsers()
-    {
-        return _connectedUsers.Keys.ToList(); // Devuelve una lista de userIds conectados
-    }
-    public bool IsUserConnected(int userId)
-    {
-        return _connectedUsers.ContainsKey(userId);
+
+        private async Task OnMessageReceivedAsync(WebSocketHandler handler, WebSocketMessageDto message)
+        {
+            switch (message.Type)
+            {
+                case "matchmakingRequest":
+                    await HandleMatchmakingRequest(handler);
+                    break;
+
+                default:
+
+                    await BroadcastMessageAsync(new WebSocketMessageDto
+                    {
+                        Type = "broadcast",
+                        Payload = $"Usuario {handler.UserId} dice: {message.Payload}"
+                    });
+                    break;
+            }
+        }
+
+        private async Task HandleMatchmakingRequest(WebSocketHandler handler)
+        {
+            await _semaphore.WaitAsync();
+
+            if (_matchmakingQueue.Contains(handler.UserId))
+            {
+                _semaphore.Release();
+                return;
+            }
+
+            if (_matchmakingQueue.Count > 0)
+            {
+
+                int opponentId = _matchmakingQueue.Dequeue();
+                if (_handlers.ContainsKey(opponentId))
+                {
+
+                    var matchInfo = new { player1 = opponentId, player2 = handler.UserId };
+                    if (_handlers.TryGetValue(opponentId, out var opponentHandler))
+                    {
+                        await opponentHandler.SendAsync(new WebSocketMessageDto
+                        {
+                            Type = "matchFound",
+                            Payload = new { opponentId = handler.UserId }
+                        });
+                    }
+                    await handler.SendAsync(new WebSocketMessageDto
+                    {
+                        Type = "matchFound",
+                        Payload = new { opponentId = opponentId }
+                    });
+                }
+                else
+                {
+
+                    _matchmakingQueue.Enqueue(handler.UserId);
+                    await handler.SendAsync(new WebSocketMessageDto
+                    {
+                        Type = "waitingForMatch",
+                        Payload = "Esperando oponente..."
+                    });
+                }
+            }
+            else
+            {
+
+                _matchmakingQueue.Enqueue(handler.UserId);
+                await handler.SendAsync(new WebSocketMessageDto
+                {
+                    Type = "waitingForMatch",
+                    Payload = "Esperando oponente..."
+                });
+            }
+            _semaphore.Release();
+        }
+
+
+        private void RemoveFromMatchmakingQueue(int userId)
+        {
+            if (_matchmakingQueue.Contains(userId))
+            {
+                var newQueue = new Queue<int>(_matchmakingQueue.Where(id => id != userId));
+                _matchmakingQueue.Clear();
+                foreach (var id in newQueue)
+                {
+                    _matchmakingQueue.Enqueue(id);
+                }
+            }
+        }
+
+
+        private async Task BroadcastOnlineUsersAsync()
+        {
+            var onlineUserIds = _handlers.Keys.ToList();
+            var dto = new WebSocketMessageDto
+            {
+                Type = "onlineUsers",
+                Payload = onlineUserIds
+            };
+            await BroadcastMessageAsync(dto);
+        }
+
+
+        private async Task BroadcastMessageAsync(WebSocketMessageDto message)
+        {
+            await _semaphore.WaitAsync();
+            var tasks = _handlers.Values.Select(handler => handler.SendAsync(message));
+            await Task.WhenAll(tasks);
+            _semaphore.Release();
+        }
+
+
+        public List<int> GetConnectedUsers()
+        {
+            return _handlers.Keys.ToList();
+        }
+
+        public bool IsUserConnected(int userId)
+        {
+            return _handlers.ContainsKey(userId);
+        }
     }
 }
