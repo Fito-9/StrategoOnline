@@ -1,0 +1,43 @@
+.game-container {
+    text-align: center;
+  }
+  
+  .board {
+    display: grid;
+    grid-template-columns: repeat(10, 50px); /* Aseguramos que haya 10 columnas */
+    grid-template-rows: repeat(10, 50px); /* Aseguramos que haya 10 filas */
+    gap: 2px;
+    margin: 20px auto;
+    width: fit-content;
+  }
+  
+  .row {
+    display: flex;
+  }
+  
+  .cell {
+    width: 60px;  /* Aumenta el tamaño de la celda */
+    height: 60px; /* Aumenta el tamaño de la celda */
+    background-color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+  }
+  
+  .piece {
+    font-weight: bold;
+    background-color: lightblue;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
+  /* Estilo adicional para las piezas si las necesitas */
+  .piece.red {
+    background-color: red;
+  }
+  
+  .piece.blue {
+    background-color: blue;
+  }
+  

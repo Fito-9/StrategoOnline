@@ -1,13 +1,16 @@
 <div class="matchmaking-container">
     <h2 class="title">Sala del Torneo</h2>
     <button class="btn" (click)="buscarPartida()">¡Unirme a la Batalla!</button>
-    
+  
     <div *ngIf="waitingMessage" class="message">
       {{ waitingMessage }}
     </div>
-    
+  
     <div *ngIf="matchFound" class="match-info">
       <p>¡Enhorabuena, has sido emparejado!</p>
       <p>Tu oponente es el usuario: {{ matchFound.opponentId }}</p>
     </div>
+  
+    <app-game *ngIf="matchFound" [gameId]="matchFound.gameId"></app-game>
   </div>
+  

@@ -10,5 +10,5 @@ namespace StrategoBackend.Models.Dto
 
         [JsonPropertyName("payload")]
         public object Payload { get; set; }
-    }
+    }   
 }
