@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StrategoBackend.WebSockets;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.WebSockets;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 
 namespace StrategoBackend.Controllers
 {
@@ -10,7 +10,6 @@ namespace StrategoBackend.Controllers
     [ApiController]
     public class WebSocketController : ControllerBase
     {
-
         private readonly WebSocketNetwork _webSocketNetwork;
 
         public WebSocketController(WebSocketNetwork webSocketNetwork)
@@ -18,7 +17,7 @@ namespace StrategoBackend.Controllers
             _webSocketNetwork = webSocketNetwork;
         }
 
-        [HttpGet]
+        [HttpGet("connect")]
         public async Task<IActionResult> ConnectAsync()
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -27,7 +26,6 @@ namespace StrategoBackend.Controllers
             }
 
             string token = HttpContext.Request.Query["token"];
-
             if (string.IsNullOrEmpty(token))
             {
                 return BadRequest("Token no proporcionado.");
@@ -41,7 +39,6 @@ namespace StrategoBackend.Controllers
 
             WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             await _webSocketNetwork.HandleAsync(webSocket, userId.Value);
-
             return Ok();
         }
 
@@ -52,18 +49,20 @@ namespace StrategoBackend.Controllers
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
                 var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value;
-
                 if (int.TryParse(userIdClaim, out int userId))
                 {
                     return userId;
                 }
             }
-            catch (Exception)
-            {
-                return null;
-            }
-
+            catch { }
             return null;
+        }
+
+        [HttpGet("online-users")]
+        public IActionResult GetOnlineUsers()
+        {
+            var onlineUsers = _webSocketNetwork.GetConnectedUsers();
+            return Ok(onlineUsers);
         }
     }
 }

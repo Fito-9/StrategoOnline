@@ -1,5 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using StrategoBackend.Models.Dto;
 
 namespace StrategoBackend.WebSockets
 {
@@ -9,30 +11,49 @@ namespace StrategoBackend.WebSockets
         private readonly WebSocket _webSocket;
         private readonly byte[] _buffer;
 
-        public int Id { get; init; }
+        // Usamos el userId extraído del token para identificar la conexión
+        public int UserId { get; }
         public bool IsOpen => _webSocket.State == WebSocketState.Open;
 
-        public event Func<WebSocketHandler, string, Task> MessageReceived;
+        // Eventos para notificar cuando se recibe un mensaje (ya convertido a DTO) y cuando se desconecta
+        public event Func<WebSocketHandler, WebSocketMessageDto, Task> MessageReceived;
         public event Func<WebSocketHandler, Task> Disconnected;
 
-        public WebSocketHandler(int id, WebSocket webSocket)
+        public WebSocketHandler(int userId, WebSocket webSocket)
         {
-            Id = id;
+            UserId = userId;
             _webSocket = webSocket;
             _buffer = new byte[BUFFER_SIZE];
         }
 
         public async Task HandleAsync()
         {
-            // Envía un mensaje inicial para notificar que se ha conectado
-            await SendAsync($"Bienvenido, tu id es {Id}");
+            // Enviamos un mensaje de bienvenida usando el DTO
+            await SendAsync(new WebSocketMessageDto { Type = "welcome", Payload = $"Bienvenido, tu id es {UserId}" });
 
             while (IsOpen)
             {
                 string message = await ReadAsync();
-                if (!string.IsNullOrWhiteSpace(message) && MessageReceived != null)
+                if (!string.IsNullOrWhiteSpace(message))
                 {
-                    await MessageReceived.Invoke(this, message);
+                    WebSocketMessageDto messageDto;
+                    try
+                    {
+                        messageDto = JsonSerializer.Deserialize<WebSocketMessageDto>(message);
+                        if (messageDto == null)
+                        {
+                            messageDto = new WebSocketMessageDto { Type = "text", Payload = message };
+                        }
+                    }
+                    catch
+                    {
+                        messageDto = new WebSocketMessageDto { Type = "text", Payload = message };
+                    }
+
+                    if (MessageReceived != null)
+                    {
+                        await MessageReceived.Invoke(this, messageDto);
+                    }
                 }
             }
 
@@ -44,7 +65,7 @@ namespace StrategoBackend.WebSockets
 
         private async Task<string> ReadAsync()
         {
-            using MemoryStream ms = new MemoryStream();
+            using var ms = new MemoryStream();
             WebSocketReceiveResult result;
             do
             {
@@ -57,19 +78,26 @@ namespace StrategoBackend.WebSockets
                 {
                     await _webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
                 }
-            }
-            while (!result.EndOfMessage);
+            } while (!result.EndOfMessage);
 
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
+        // Método para enviar mensajes en forma de cadena JSON
         public async Task SendAsync(string message)
         {
             if (IsOpen)
             {
-                byte[] bytes = Encoding.UTF8.GetBytes(message);
+                var bytes = Encoding.UTF8.GetBytes(message);
                 await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
             }
+        }
+
+        // Sobrecarga para enviar mensajes usando el DTO (se serializa a JSON internamente)
+        public async Task SendAsync(WebSocketMessageDto dto)
+        {
+            string json = JsonSerializer.Serialize(dto);
+            await SendAsync(json);
         }
 
         public void Dispose()

@@ -7,13 +7,14 @@ import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
+
 export class WebsocketService {
   private socket$: WebSocketSubject<string> | null = null;
   private connectedUsers: Set<number> = new Set();
 
-  // Observables para notificar cambios en la conexión
   public connected$ = new BehaviorSubject<boolean>(false);
   public onlineUsers$ = new BehaviorSubject<Set<number>>(new Set());
+  public matchmakingMessage$ = new BehaviorSubject<any>(null);
 
   constructor(private http: HttpClient) {}
 
@@ -35,6 +36,7 @@ export class WebsocketService {
         next: () => {
           console.log('WebSocket conectado');
           this.connected$.next(true);
+          this.reconnectAttempts = 0; // Reiniciar intentos de reconexión
         }
       },
       closeObserver: {
@@ -43,13 +45,17 @@ export class WebsocketService {
           this.connected$.next(false);
           this.connectedUsers.clear();
           this.onlineUsers$.next(new Set());
+          this.reconnect(); // Intentar reconectar
         }
       }
     });
 
     this.socket$.subscribe({
       next: (message: string) => this.handleMessage(message),
-      error: err => console.error('Error en WebSocket:', err)
+      error: err => {
+        console.error('Error en WebSocket:', err);
+        this.reconnect(); // Intentar reconectar en caso de error
+      }
     });
   }
 
@@ -63,17 +69,41 @@ export class WebsocketService {
 
   private handleMessage(message: string): void {
     console.log('Mensaje recibido:', message);
-
-    if (message.startsWith('Conectado:')) {
-      const userId = parseInt(message.split(' ')[1], 10);
-      this.connectedUsers.add(userId);
-    } 
-    else if (message.startsWith('Desconectado:')) {
-      const userId = parseInt(message.split(' ')[1], 10);
-      this.connectedUsers.delete(userId);
+    try {
+      const parsed = JSON.parse(message);
+      switch (parsed.type) {
+        case 'onlineUsers':
+          const userIds: number[] = parsed.payload;
+          this.connectedUsers = new Set(userIds);
+          this.onlineUsers$.next(new Set(userIds));
+          break;
+        case 'matchFound':
+          console.log('Match encontrado. Tu oponente es el usuario:', parsed.payload.opponentId);
+          this.matchmakingMessage$.next(parsed);
+          break;
+        case 'waitingForMatch':
+          console.log('Esperando oponente:', parsed.payload);
+          this.matchmakingMessage$.next(parsed);
+          break;
+        default:
+          console.log('Mensaje de tipo desconocido:', parsed);
+      }
+    } catch (error) {
+      console.error('Error parseando mensaje JSON:', error);
     }
+  }
 
-    this.onlineUsers$.next(new Set(this.connectedUsers));
+  requestMatchmaking(): void {
+    if (this.socket$) {
+      console.log('Enviando solicitud de matchmaking');
+      const message = {
+        type: 'matchmakingRequest',
+        payload: {}
+      };
+      this.socket$.next(JSON.stringify(message));
+    } else {
+      console.warn('No se puede enviar solicitud: Socket no está conectado.');
+    }
   }
 
   getOnlineUsers(): Set<number> {
@@ -81,11 +111,27 @@ export class WebsocketService {
   }
 
   fetchOnlineUsers(): void {
-    this.http.get<number[]>(`${environment.apiUrl}/socket/online-users`).subscribe(onlineUsers => {
+    this.http.get<number[]>(`${environment.apiUrl}WebSocket/online-users`).subscribe(onlineUsers => {
       this.connectedUsers = new Set(onlineUsers);
       this.onlineUsers$.next(this.connectedUsers);
     }, error => {
       console.error("Error obteniendo usuarios conectados:", error);
     });
+  }
+
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectInterval = 5000; // 5 segundos
+
+  private reconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      setTimeout(() => {
+        console.log(`çIntentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+        this.connect();
+      }, this.reconnectInterval);
+    } else {
+      console.error('Número máximo de intentos de reconexión alcanzado.');
+    }
   }
 }
