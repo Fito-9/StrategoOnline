@@ -163,7 +163,10 @@ namespace StrategoBackend.WebSockets
         }
 
         // Métodos auxiliares para consultar el estado
+        public List<int> GetConnectedUsers()
+        {
             return _handlers.Keys.ToList();
+        }
 
         public bool IsUserConnected(int userId)
         {
