@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { BehaviorSubject } from 'rxjs';
@@ -118,20 +119,19 @@ export class WebsocketService {
       console.error("Error obteniendo usuarios conectados:", error);
     });
   }
-
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 5000; // 5 segundos
-
+  
   private reconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       setTimeout(() => {
-        console.log(`çIntentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+        console.log(`Intentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
         this.connect();
       }, this.reconnectInterval);
     } else {
       console.error('Número máximo de intentos de reconexión alcanzado.');
     }
   }
-}
+  }
