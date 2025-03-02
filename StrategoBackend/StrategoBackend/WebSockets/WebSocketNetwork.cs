@@ -1,25 +1,26 @@
-﻿
+﻿using StrategoBackend.Models.Dto;
 using System.Net.WebSockets;
-using StrategoBackend.Models.Dto;
 
 namespace StrategoBackend.WebSockets
 {
     public class WebSocketNetwork
     {
-       
+        // Diccionario de conexiones activas (userId -> handler)
         private readonly Dictionary<int, WebSocketHandler> _handlers = new Dictionary<int, WebSocketHandler>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-
+        // Cola para el matchmaking (almacena userIds esperando partida)
         private readonly Queue<int> _matchmakingQueue = new Queue<int>();
 
         public async Task HandleAsync(WebSocket webSocket, int userId)
         {
-
+            // Añadimos el nuevo handler y suscribimos a sus eventos
             WebSocketHandler handler = await AddHandlerAsync(webSocket, userId);
 
+            // Enviamos la lista actualizada de usuarios conectados
             await BroadcastOnlineUsersAsync();
 
+            // Esperamos y procesamos los mensajes de este handler
             await handler.HandleAsync();
         }
 
@@ -40,16 +41,16 @@ namespace StrategoBackend.WebSockets
             if (_handlers.ContainsKey(handler.UserId))
             {
                 _handlers.Remove(handler.UserId);
-
+                // Si el usuario estaba esperando en matchmaking, lo quitamos
                 RemoveFromMatchmakingQueue(handler.UserId);
             }
             _semaphore.Release();
 
-
+            // Actualizamos la lista de usuarios conectados
             await BroadcastOnlineUsersAsync();
         }
 
-
+        // Procesa los mensajes recibidos según su tipo
         private async Task OnMessageReceivedAsync(WebSocketHandler handler, WebSocketMessageDto message)
         {
             switch (message.Type)
@@ -57,9 +58,9 @@ namespace StrategoBackend.WebSockets
                 case "matchmakingRequest":
                     await HandleMatchmakingRequest(handler);
                     break;
-
+                // Aquí puedes agregar otros tipos, por ejemplo "friendRequest", "chat", etc.
                 default:
-
+                    // Por defecto, realizamos un broadcast del mensaje recibido
                     await BroadcastMessageAsync(new WebSocketMessageDto
                     {
                         Type = "broadcast",
@@ -69,10 +70,11 @@ namespace StrategoBackend.WebSockets
             }
         }
 
+        // Gestiona la solicitud de matchmaking
         private async Task HandleMatchmakingRequest(WebSocketHandler handler)
         {
             await _semaphore.WaitAsync();
-
+            // Si el usuario ya está en cola, no hacemos nada
             if (_matchmakingQueue.Contains(handler.UserId))
             {
                 _semaphore.Release();
@@ -81,11 +83,11 @@ namespace StrategoBackend.WebSockets
 
             if (_matchmakingQueue.Count > 0)
             {
-
+                // Hay al menos un jugador esperando: hacemos match
                 int opponentId = _matchmakingQueue.Dequeue();
                 if (_handlers.ContainsKey(opponentId))
                 {
-
+                    // Se envía a ambos el mensaje de match encontrado
                     var matchInfo = new { player1 = opponentId, player2 = handler.UserId };
                     if (_handlers.TryGetValue(opponentId, out var opponentHandler))
                     {
@@ -103,7 +105,7 @@ namespace StrategoBackend.WebSockets
                 }
                 else
                 {
-
+                    // Si por alguna razón el oponente ya no está conectado, se reincorpora el actual a la cola
                     _matchmakingQueue.Enqueue(handler.UserId);
                     await handler.SendAsync(new WebSocketMessageDto
                     {
@@ -114,7 +116,7 @@ namespace StrategoBackend.WebSockets
             }
             else
             {
-
+                // No hay nadie esperando: agregamos al usuario a la cola de matchmaking
                 _matchmakingQueue.Enqueue(handler.UserId);
                 await handler.SendAsync(new WebSocketMessageDto
                 {
@@ -125,7 +127,7 @@ namespace StrategoBackend.WebSockets
             _semaphore.Release();
         }
 
-
+        // Elimina un usuario de la cola de matchmaking (si estaba esperando)
         private void RemoveFromMatchmakingQueue(int userId)
         {
             if (_matchmakingQueue.Contains(userId))
@@ -139,7 +141,7 @@ namespace StrategoBackend.WebSockets
             }
         }
 
-
+        // Envía a todos la lista actualizada de usuarios conectados
         private async Task BroadcastOnlineUsersAsync()
         {
             var onlineUserIds = _handlers.Keys.ToList();
@@ -151,7 +153,7 @@ namespace StrategoBackend.WebSockets
             await BroadcastMessageAsync(dto);
         }
 
-
+        // Envía un mensaje (DTO) a todas las conexiones activas
         private async Task BroadcastMessageAsync(WebSocketMessageDto message)
         {
             await _semaphore.WaitAsync();
@@ -160,11 +162,8 @@ namespace StrategoBackend.WebSockets
             _semaphore.Release();
         }
 
-
-        public List<int> GetConnectedUsers()
-        {
+        // Métodos auxiliares para consultar el estado
             return _handlers.Keys.ToList();
-        }
 
         public bool IsUserConnected(int userId)
         {

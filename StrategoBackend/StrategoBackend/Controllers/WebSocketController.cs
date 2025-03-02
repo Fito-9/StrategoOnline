@@ -1,5 +1,4 @@
-﻿// File: Controllers/WebSocketController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using StrategoBackend.WebSockets;
 using System.Net.WebSockets;
 using System.IdentityModel.Tokens.Jwt;

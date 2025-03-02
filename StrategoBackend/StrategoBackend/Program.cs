@@ -10,11 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSingleton<StrategoBackend.Service.GameService>();
 builder.Services.AddSingleton<WebSocketNetwork>();
 builder.Services.AddTransient<WebSocketMiddleware>();
 builder.Services.AddScoped<MyDbContext>();
 builder.Services.AddScoped<UnitOfWork>();
+builder.Services.AddScoped<GameManagerService>();
 
 builder.Services.AddScoped<FriendshipService>();
 

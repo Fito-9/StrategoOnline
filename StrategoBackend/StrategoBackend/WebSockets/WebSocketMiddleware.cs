@@ -1,6 +1,6 @@
 ﻿using System.Net.WebSockets;
 using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt; 
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,20 +22,20 @@ namespace StrategoBackend.WebSockets
             {
                 // Extraer el token de la query string y colocarlo en la cabecera
                 string token = context.Request.Query["token"];
-                int userId = 0; 
+                int userId = 0;
 
                 if (!string.IsNullOrEmpty(token))
                 {
                     context.Request.Headers["Authorization"] = $"Bearer {token}";
 
-                    // 🔥 Extraer el `userId` del token
+                    // 🔥 Extraer el userId del token
                     userId = ExtractUserIdFromToken(token);
                 }
 
                 // Aceptamos la conexión WebSocket y pasamos el userId
                 using WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                await _webSocketNetwork.HandleAsync(webSocket, userId); 
-                return; 
+                await _webSocketNetwork.HandleAsync(webSocket, userId);
+                return;
             }
             else
             {
@@ -44,7 +44,7 @@ namespace StrategoBackend.WebSockets
             }
         }
 
-        // 🔥 Función para extraer `userId` del token JWT
+        // 🔥 Función para extraer userId del token JWT
         private int ExtractUserIdFromToken(string token)
         {
             try
@@ -52,7 +52,7 @@ namespace StrategoBackend.WebSockets
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
 
-                // Extraer el `userId` del claim (nombre del claim puede variar según configuración del token)
+                // Extraer el userId del claim (nombre del claim puede variar según configuración del token)
                 var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value;
 
                 return userIdClaim != null ? int.Parse(userIdClaim) : 0;
