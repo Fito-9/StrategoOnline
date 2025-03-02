@@ -1,17 +1,21 @@
 <div *ngIf="board.length && pieces.length; else loading">
-    <h3>Partida #{{ gameId }}</h3>
-    <div class="board">
-      <div *ngFor="let row of board; let i = index" class="row">
-        <div *ngFor="let cell of row; let j = index" class="cell">
-          <div *ngIf="getPieceAt(i, j)" class="piece">
-            {{ getPieceAt(i, j)?.name }}  <!-- Aquí puedes mostrar algo de la pieza -->
+  <h3>Partida #{{ gameId }}</h3>
+  
+  <div class="board">
+    <div *ngFor="let row of board; let i = index" class="row">
+      <div *ngFor="let cell of row; let j = index" class="cell">
+        <ng-container *ngIf="getPieceAt(i, j) as piece">
+          <div class="piece">
+            {{ piece.name }}  <!-- Se muestra el nombre de la pieza -->
           </div>
-        </div>
+        </ng-container>
       </div>
     </div>
   </div>
-  
-  <ng-template #loading>
+</div>
+
+<ng-template #loading>
+  <div class="loading-container">
     <p>Cargando el tablero...</p>
-  </ng-template>
-  
+  </div>
+</ng-template>
