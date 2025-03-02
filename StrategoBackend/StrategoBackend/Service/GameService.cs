@@ -47,15 +47,22 @@ namespace StrategoBackend.Service
         public GameStateDto GetGameState(Guid gameId)
         {
             if (!_games.TryGetValue(gameId, out var session)) return null;
+            var boardRep = new List<List<PieceInfoDto>>();
 
-            var boardRep = new List<List<string>>();
             for (int r = 0; r < 10; r++)
             {
-                var row = new List<string>();
+                var row = new List<PieceInfoDto>();
                 for (int c = 0; c < 10; c++)
                 {
                     var gs = session.Game.initialGrid.mainGrid[r, c];
-                    row.Add(gs._piece != null ? gs._piece.pieceName.ToString() : gs._type.ToString());
+                    var pieceInfo = new PieceInfoDto
+                    {
+                        Type = gs._type.ToString(),
+                        IsPlayable = gs._isPlayable,
+                        PieceName = gs._piece != null ? gs._piece.pieceName.ToString() : "None",
+                        PlayerName = gs._piece != null ? gs._piece.piecePlayer.name : ""
+                    };
+                    row.Add(pieceInfo);
                 }
                 boardRep.Add(row);
             }
