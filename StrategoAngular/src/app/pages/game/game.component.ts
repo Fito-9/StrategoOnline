@@ -1,9 +1,10 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { WebsocketService } from '../../services/websocket.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-game',
@@ -14,17 +15,25 @@ import { Subscription } from 'rxjs';
 })
 export class GameComponent implements OnInit, OnDestroy {
   @Input() gameId!: string;
-  board: any[][] = []; // Matriz del tablero
+  board: any[][] = []; // tablero
   selectedPiece: { row: number, col: number } | null = null;
   private gameUpdateSubscription: Subscription | null = null;
-  currentTurn: string = 'Player1'; // Por defecto, Player1 comienza
+  private gameEndSubscription: Subscription | null = null; // Nueva suscripción
+  currentTurn: string = 'Player1'; // Por defecto, El jugador 1 es el que empieza
   isMyTurn: boolean = false;
   message: string = '';
+  gameEnded = false; 
+  gameResult: {
+    status: string, 
+    winner: string, 
+    winnerName: string
+  } | null = null;
 
   constructor(
     private gameService: GameService, 
     private route: ActivatedRoute,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
+    private router: Router 
   ) {}
 
   ngOnInit(): void {
@@ -36,48 +45,52 @@ export class GameComponent implements OnInit, OnDestroy {
   
     // Cargar estado inicial del juego
     this.loadGameState();
-  
-    this.websocketService.gameUpdate$.subscribe(update => {
-      this.currentTurn = update.currentTurn; // Asegúrate que esto sea "Player1" o "Player2"
-      this.checkTurn(); // Actualiza isMyTurn
-    
-    
+
+    // Suscribirse a las actualizaciones del juego por websockets
+    this.gameUpdateSubscription = this.websocketService.gameUpdate$.subscribe(update => {
       if (update.gameId === this.gameId) {
         console.log('WebSocket: Antes de la actualización', JSON.stringify(this.board));
-    
         this.board = update.board; // 🔹 Aquí se actualiza el tablero
-    
         console.log('WebSocket: Después de la actualización', JSON.stringify(this.board));
-    
         this.currentTurn = update.currentTurn;
         this.checkTurn();
-    
-        // 🔹 Verificar que las piezas siguen en el tablero tras la actualización
         this.debugBoard();
       }
     });
+
+    // llamada al final del juego
+    this.gameEndSubscription = this.websocketService.gameEndMessage$
+      .pipe(filter(message => message !== null)) 
+      .subscribe(gameEndData => {
+        this.gameEnded = true;
+        this.gameResult = {
+          status: gameEndData.status,
+          winner: gameEndData.winner,
+          winnerName: gameEndData.winnerName
+        };
+        // mensaje cuando la partida se ha terminado
+        this.showGameEndDialog();
+      });
   }
+
   ngOnDestroy(): void {
-    // Limpiar suscripciones al destruir el componente
     if (this.gameUpdateSubscription) {
       this.gameUpdateSubscription.unsubscribe();
+    }
+    if (this.gameEndSubscription) {
+      this.gameEndSubscription.unsubscribe(); // Limpiar suscripción al evento de fin de juego
     }
   }
 
   loadGameState(): void {
     console.log(`Cargando estado del juego para gameId: ${this.gameId}`);
-  
     this.gameService.getGameState(this.gameId).subscribe(response => {
       console.log('Respuesta del servidor recibida:', response);
-  
       if (response && response.board) {
-        console.log('Actualizando tablero desde la respuesta HTTP');
         this.board = response.board;
-  
         if (response.currentTurn) {
           this.currentTurn = response.currentTurn;
         }
-  
         this.checkTurn();
         this.debugBoard();
       } else {
@@ -87,6 +100,7 @@ export class GameComponent implements OnInit, OnDestroy {
       console.error('Error al obtener el estado del juego:', error);
     });
   }
+
   private debugBoard(): void {
     if (!this.board || this.board.length === 0) {
       console.log('El tablero está vacío o no existe');
@@ -105,58 +119,25 @@ export class GameComponent implements OnInit, OnDestroy {
           
           // Verificar si la celda es un lago
           if (cell.isPlayable === false) {
-            console.log(`⚠️ Celda [${i},${j}] es un lago (No jugable)`);
+            console.log(`Celda [${i},${j}] es un lago`);
           }
         } else {
           console.log(`Celda [${i},${j}] está vacía`);
         }
       }
-    }
-  
-    // Contar piezas por jugador
-    const playerPieces = {
-      [this.getPlayerName()]: 0,
-      other: 0
-    };
-    for (let i = 0; i < this.board.length; i++) {
-      for (let j = 0; j < this.board[i].length; j++) {
-        const cell = this.board[i][j];
-        if (cell && cell.pieceName && cell.pieceName !== 'None') {
-          if (cell.PlayerName === this.getPlayerName()) {
-            playerPieces[this.getPlayerName()]++;
-          } else {
-            playerPieces.other++;
-          }
-        }
-      }
-    }
-  
-    console.log('Piezas por jugador:', playerPieces);
-    console.log('Turno actual:', this.currentTurn);
-    console.log('Es mi turno:', this.isMyTurn);
-  }
-  
-  
+    }}
+
   checkTurn(): void {
     const playerType = this.getPlayerType();
-    console.log(`Comprobando turno - Mi tipo: ${playerType}, Turno actual: ${this.currentTurn}`);
-  
     this.isMyTurn = this.currentTurn === playerType;
-  
-    if (this.isMyTurn) {
-      this.message = 'Es tu turno';
-    } else {
-      this.message = 'Esperando al oponente...';
-    }
-  
+    this.message = this.isMyTurn ? 'Es tu turno' : 'Esperando al oponente...';
     console.log(`¿Es mi turno? ${this.isMyTurn}`);
   }
-  // Método para obtener el tipo de jugador del localStorage
+
   getPlayerType(): string {
     return localStorage.getItem('playerType') || '';
   }
 
-  // Método para obtener el nombre del jugador del localStorage
   getPlayerName(): string {
     return localStorage.getItem('playerName') || '';
   }
@@ -167,24 +148,19 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   
     const cell = this.board[row][col];
-    
-    // 1. Corregir nombres de propiedades (PascalCase)
-    if (cell.isPlayable === false) { // ✔️ Ahora con mayúscula
+  
+    if (cell.isPlayable === false) { 
       return '💧';
     }
-  
-    // 2. Usar PieceName en vez de pieceName
-    if (!cell.pieceName || cell.pieceName === 'None') { // ✔️
+
+    if (!cell.pieceName || cell.pieceName === 'None') { 
       return '';
     }
   
-    // 3. Corregir referencia a PlayerName
-    const isMyPiece = cell.playerName === this.getPlayerName(); // ✔️
+
+    const isMyPiece = cell.playerName === this.getPlayerName(); 
   
   
-    // Determinar si la pieza es del jugador actual
-  
-    // Mostrar el icono adecuado según el tipo de pieza
     let icon = '';
     switch (cell.pieceName) {
       case 'Marshal': icon = '⭐'; break;
@@ -204,38 +180,28 @@ export class GameComponent implements OnInit, OnDestroy {
   
     console.log(`Comparando: ${cell.PlayerName} vs ${this.getPlayerName()}`);
     return isMyPiece ? `<span>${icon}</span>` : '?';
-  }
+  }   
+
   handleCellClick(row: number, col: number): void {
-    console.log(`Jugador actual: ${this.getPlayerName()}`);
-    console.log(`Celda: ${JSON.stringify(this.board[row][col])}`);
-    
     if (!this.isMyTurn) {
       console.warn('No es tu turno');
       return;
     }
-  
     const cell = this.board[row][col];
-    console.log(`handleCellClick: Celda seleccionada ->`, cell);
-  
     if (this.selectedPiece) {
-      console.log(`handleCellClick: Moviendo de (${this.selectedPiece.row},${this.selectedPiece.col}) a (${row},${col})`);
       this.movePiece(this.selectedPiece.row, this.selectedPiece.col, row, col);
       this.selectedPiece = null;
     } else if (cell.pieceName && cell.playerName === this.getPlayerName()) {
-      console.log(`handleCellClick: Seleccionando pieza en (${row},${col})`);
       this.selectedPiece = { row, col };
     } else {
-      console.warn(`handleCellClick: No puedes seleccionar esta celda`);
+      console.warn(`No puedes seleccionar esta celda`);
     }
   }
-  
 
   movePiece(fromRow: number, fromCol: number, toRow: number, toCol: number): void {
     this.gameService.movePiece(this.gameId, fromRow, fromCol, toRow, toCol).subscribe(response => {
       if (response.result === 1 || response.result === 10 || response.result === 20 || response.result === 30 || response.result === 50) {
         console.log("Movimiento exitoso");
-        // El tablero se actualizará vía WebSocket, así que no es necesario recargar aquí
-        // Pero actualizamos el estado del turno
         this.isMyTurn = false;
         this.message = 'Esperando al oponente...';
       } else {
@@ -249,5 +215,20 @@ export class GameComponent implements OnInit, OnDestroy {
     }, error => {
       console.error("Error al mover la pieza:", error);
     });
+  }
+
+  showGameEndDialog(): void {
+    if (!this.gameResult) {
+      console.warn('No hay resultados del juego para mostrar');
+      return;
+    }
+    const isWinner = this.gameResult.winner === this.getPlayerType();
+    const message = isWinner 
+      ? `¡Ganaste!  Has capturado la bandera.` 
+      : `Perdiste. El rival capturó tu bandera.`;
+    alert(message);
+
+    // Navegar de vuelta al menú principal tras finalizar el juego
+    this.router.navigate(['']);
   }
 }

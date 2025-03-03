@@ -8,7 +8,7 @@
 public class PieceInfoDto
 {
     public string type { get; set; }
-    public string pieceName { get; set; }
+    public string pieceName {    get; set; }
     public string playerName { get; set; }
     public bool isPlayable { get; set; }
 }

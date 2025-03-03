@@ -72,33 +72,63 @@ namespace StrategoBackend.Game
         // Método para colocar las piezas por defecto en el tablero
         public void SetupDefaultPositions()
         {
+            Random random = new Random();
+
             // Colocar piezas de Player2 en filas 0 a 3
-            int index2 = 0;
-            for (int row = 0; row < 4 && index2 < player2Pieces.Count; row++)
+            PlacePlayerPiecesRandomly(SpaceType.Player2, player2Pieces, 0, 3, random);
+
+            // Colocar piezas de Player1 en filas 6 a 9
+            PlacePlayerPiecesRandomly(SpaceType.Player1, player1Pieces, 6, 9, random);
+        }
+
+        private void PlacePlayerPiecesRandomly(SpaceType playerType, List<Piece> playerPieces, int startRow, int endRow, Random random)
+        {
+            // Crear una lista de todas las posiciones disponibles para el jugador
+            var availablePositions = new List<Position>();
+            for (int row = startRow; row <= endRow; row++)
             {
-                for (int col = 0; col < 10 && index2 < player2Pieces.Count; col++)
+                for (int col = 0; col < 10; col++)
                 {
-                    if (initialGrid.mainGrid[row, col]._type == SpaceType.Player2 && initialGrid.mainGrid[row, col]._isPlayable)
+                    if (initialGrid.mainGrid[row, col]._type == playerType &&
+                        initialGrid.mainGrid[row, col]._isPlayable)
                     {
-                        initialGrid.mainGrid[row, col]._piece = player2Pieces[index2++];
+                        availablePositions.Add(new Position { row = row, col = col });
                     }
                 }
             }
 
-            // Colocar piezas de Player1 en filas 6 a 9
-            int index1 = 0;
-            for (int row = 6; row < 10 && index1 < player1Pieces.Count; row++)
+            // Mezclar las posiciones disponibles
+            for (int i = 0; i < availablePositions.Count; i++)
             {
-                for (int col = 0; col < 10 && index1 < player1Pieces.Count; col++)
+                int j = random.Next(i, availablePositions.Count);
+                var temp = availablePositions[i];
+                availablePositions[i] = availablePositions[j];
+                availablePositions[j] = temp;
+            }
+
+            // Colocar cada pieza en una posición aleatoria
+            int positionIndex = 0;
+            foreach (var piece in playerPieces)
+            {
+                // Buscar una posición no ocupada
+                while (positionIndex < availablePositions.Count)
                 {
-                    if (initialGrid.mainGrid[row, col]._type == SpaceType.Player1 && initialGrid.mainGrid[row, col]._isPlayable)
+                    var pos = availablePositions[positionIndex];
+                    if (initialGrid.mainGrid[pos.row, pos.col]._piece == null)
                     {
-                        initialGrid.mainGrid[row, col]._piece = player1Pieces[index1++];
+                        initialGrid.mainGrid[pos.row, pos.col]._piece = piece;
+                        break;
                     }
+                    positionIndex++;
+                }
+
+                // Si no quedan posiciones, detener la colocación (aunque esto no debería ocurrir)
+                if (positionIndex >= availablePositions.Count)
+                {
+                    break;
                 }
             }
         }
-
         // Calcula los movimientos posibles para una pieza, devolviendo la lista de posiciones y un código.
         public List<Position> getMoves(Position pos, out int returnCode)
         {

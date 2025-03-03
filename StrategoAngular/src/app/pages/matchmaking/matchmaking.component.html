@@ -8,10 +8,7 @@
     
         <div *ngIf="matchFound" class="match-info">
         <p>¡Enhorabuena, has sido emparejado!</p>
-        <p>Tu oponente es el usuario: {{ matchFound.opponentId }}</p>
         </div>
-    
-        <!-- File: matchmaking.component.html -->
     <app-game *ngIf="matchFound" [gameId]="matchFound.gameId.toString()"></app-game>
     </div>
     

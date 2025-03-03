@@ -15,8 +15,8 @@ export class WebsocketService {
   public connected$ = new BehaviorSubject<boolean>(false);
   public onlineUsers$ = new BehaviorSubject<Set<number>>(new Set());
   public matchmakingMessage$ = new BehaviorSubject<any>(null);
-  public gameUpdate$ = new BehaviorSubject<any>(null); // Nuevo BehaviorSubject para actualizaciones del juego
-
+  public gameUpdate$ = new BehaviorSubject<any>(null);
+  public gameEndMessage$ = new BehaviorSubject<any>(null);
   constructor(private http: HttpClient) {}
 
   connect(): void {
@@ -80,19 +80,27 @@ export class WebsocketService {
           this.connectedUsers = new Set(userIds);
           this.onlineUsers$.next(new Set(userIds));
           break;
+
         case 'matchFound':
           console.log('Match encontrado. Tu oponente es el usuario:', parsed.payload.opponentId);
           this.matchmakingMessage$.next(parsed);
           break;
+
         case 'waitingForMatch':
           console.log('Esperando oponente:', parsed.payload);
           this.matchmakingMessage$.next(parsed);
           break;
+
+          case 'gameEnd':
+            console.log('Juego terminado:', parsed.payload);
+            this.gameEndMessage$.next(parsed.payload);
+            break
+
         case 'gameUpdate':
           console.log('Actualización del juego recibida:', parsed.payload);
-          // Importante: usar next() para notificar a los suscriptores
           this.gameUpdate$.next(parsed.payload);
           break;
+          
         default:
           console.log('Mensaje de tipo desconocido:', parsed);
       }
