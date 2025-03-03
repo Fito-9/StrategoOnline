@@ -12,8 +12,16 @@ namespace StrategoBackend.Models.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+
+#if DEBUG
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             optionsBuilder.UseSqlite($"DataSource={baseDir}{DATABASE_PATH}");
+
+
+#else
+            string connection = "Server=db14848.databaseasp.net; Database=db14848; Uid=db14848; Pwd=b@3R4M%a_5qN;";
+            optionsBuilder.UseMySql(connection, ServerVersion.AutoDetect(connection));
+#endif
         }
     }
 }
