@@ -30,11 +30,11 @@ import { WebsocketService } from './websocket.service';
     }
 
     register(authData: FormData): Observable<any> {
-      return this.http.post<any>(`${this.URL}User/Register`, authData);
+      return this.http.post<any>(`${this.URL}user/register`, authData);
     }
     
     login(authData: AuthRequest): Observable<AuthResponse> {
-      return this.http.post<AuthResponse>(`${this.URL}User/login`, authData).pipe(
+      return this.http.post<AuthResponse>(`${this.URL}user/login`, authData).pipe(
         tap((response: AuthResponse) => {
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('UserId', response.userId.toString());
@@ -50,7 +50,7 @@ import { WebsocketService } from './websocket.service';
     }
 
     async getUsers(): Promise<Result<User[]>> {
-      return this.api.get<User[]>(`${this.URL}api/User`);
+      return this.api.get<User[]>(`${this.URL}user`);
     }
     
 
