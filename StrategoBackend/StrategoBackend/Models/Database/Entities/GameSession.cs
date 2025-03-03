@@ -7,6 +7,8 @@ namespace StrategoBackend.Models.Database.Entities
         public Guid GameId { get; private set; }
         public int Player1Id { get; private set; }
         public int Player2Id { get; private set; }
+        public SpaceType currentTurn { get; set; }
+
         public StrategoGame Game { get; private set; }  // Instancia de la partida
 
         public GameSession(Player player1, int player1Id, Player player2, int player2Id)

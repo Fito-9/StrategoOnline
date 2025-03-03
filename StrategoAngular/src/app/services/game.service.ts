@@ -9,7 +9,18 @@ import { environment } from '../../environments/environment';
 export class GameService {
   constructor(private http: HttpClient) {}
 
-  getGameState(gameId: number): Observable<any> {
+  getGameState(gameId: string): Observable<any> {
     return this.http.get(`${environment.apiUrl}Game/game-state?gameId=${gameId}`);
   }
+
+  movePiece(gameId: string, fromRow: number, fromCol: number, toRow: number, toCol: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}Game/move-piece?gameId=${gameId}`, {
+      FromRow: fromRow,
+      FromCol: fromCol,
+      ToRow: toRow,
+      ToCol: toCol
+    });
+  }
+  
+  
 }

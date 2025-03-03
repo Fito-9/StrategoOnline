@@ -73,7 +73,7 @@ namespace StrategoBackend.Service
         // Mover una pieza en el tablero
         public int MovePiece(Guid gameId, MovePieceDto request)
         {
-            if (!_games.TryGetValue(gameId, out var session)) return -1;
+            if (!_games.TryGetValue(gameId, out var session)) return -1;    
 
             Position from = new Position { row = request.FromRow, col = request.FromCol };
             Position to = new Position { row = request.ToRow, col = request.ToCol };

@@ -11,27 +11,23 @@ import { CommonModule } from '@angular/common';
   styleUrl: './game.component.css'
 })
 export class GameComponent implements OnInit {
-  @Input() gameId!: number;
+  @Input() gameId!: string;
   board: any[][] = []; // Matriz del tablero
-  pieces: any[] = []; // Lista de fichas
+  selectedPiece: { row: number, col: number } | null = null;
 
   constructor(private gameService: GameService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     if (!this.gameId) {
-      this.gameId = Number(this.route.snapshot.paramMap.get('id')); // Obtener gameId desde la URL
+      this.gameId = this.route.snapshot.paramMap.get('id')!; 
     }
     this.loadGameState();
   }
 
   loadGameState(): void {
     this.gameService.getGameState(this.gameId).subscribe(response => {
-      console.log('Estado del juego:', response);
-        
       if (response && response.board) {
         this.board = response.board;
-        // Crear un arreglo de piezas si no existe
-        this.pieces = [];
       } else {
         console.error('Datos incompletos recibidos del servidor');
       }
@@ -44,37 +40,61 @@ export class GameComponent implements OnInit {
     const cell = this.board[row][col];
     if (!cell) return '';
     
-    // Si hay una pieza específica, mostrar su tipo
+    const currentPlayerType = localStorage.getItem('playerType') || '';
+    
     if (cell.pieceName && cell.pieceName !== 'None') {
       let icon = '';
-      
-      // Mapeo de piezas a iconos (puedes usar emojis o caracteres especiales)
       switch (cell.pieceName) {
         case 'Marshal': icon = '⭐'; break;
-        case 'General': icon = '★'; break;
-        case 'Colonel': icon = '✹'; break;
-        case 'Major': icon = '✸'; break;
-        case 'Captain': icon = '✷'; break;
-        case 'Lieutenant': icon = '✶'; break;
-        case 'Sergeant': icon = '✵'; break;
+        case 'General': icon = 'G'; break;
+        case 'Colonel': icon = 'C'; break;
+        case 'Major': icon = 'M'; break;
+        case 'Captain': icon = 'CA'; break;
+        case 'Lieutenant': icon = 'L'; break;
+        case 'Sergeant': icon = 'S'; break;
         case 'Miner': icon = '⛏️'; break;
-        case 'Scout': icon = '🔍'; break;
+        case 'Scout': icon = 's'; break;
         case 'Spy': icon = '🕵️'; break;
-        case 'Bomb': icon = '💣'; break;
+        case 'Bomb': icon = 'b'; break;
         case 'Flag': icon = '🏁'; break;
         default: icon = '?'; break;
       }
       
-      // Agregar color según el jugador
-      const playerClass = cell.type === 'Player1' ? 'player1' : 'player2';
-      return `<span class="${playerClass}">${icon}</span>`;
+      return cell.playerName === localStorage.getItem('playerName') ? `<span>${icon}</span>` : '?';
+
+
     }
-    
-    // Si no hay pieza, mostrar vacío o lago
-    if (!cell.isPlayable) {
-      return '💧'; // Lagos
+
+    return cell.isPlayable ? '' : '💧';
+  }
+
+  handleCellClick(row: number, col: number): void {
+    const cell = this.board[row][col];
+    const currentPlayerType = localStorage.getItem('playerType') || '';
+
+    if (this.selectedPiece) {
+      // Intentamos mover la pieza seleccionada a la nueva celda
+      this.movePiece(this.selectedPiece.row, this.selectedPiece.col, row, col);
+      this.selectedPiece = null; // Deseleccionamos la pieza después del intento de movimiento
+    } else {
+      // Si la celda tiene una pieza del jugador, la seleccionamos
+      if (cell.pieceName && cell.playerName === localStorage.getItem('playerName')) {
+        this.selectedPiece = { row, col };
+      }
     }
-    
-    return ''; // Espacios vacíos
+  }
+
+  movePiece(fromRow: number, fromCol: number, toRow: number, toCol: number): void {
+    this.gameService.movePiece(this.gameId, fromRow, fromCol, toRow, toCol).subscribe(response => {
+      if (response.result === 1) {
+        console.log("Movimiento exitoso");
+        this.loadGameState();
+      } else {
+        console.error("Movimiento inválido");
+      }
+      
+    }, error => {
+      console.error("Error al mover la pieza:", error);
+    });
   }
 }

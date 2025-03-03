@@ -88,21 +88,24 @@ namespace StrategoBackend.WebSockets
                         var matchMessage = new WebSocketMessageDto
                         {
                             Type = "matchFound",
-                            Payload = new { opponentId = handler.UserId, gameId = gameSession.GameId }
+                            Payload = new
+                            {
+                                opponentId = handler.UserId,
+                                gameId = gameSession.GameId,
+                                player1Id = gameSession.Player1Id,
+                                player2Id = gameSession.Player2Id
+                            }
                         };
 
+                        // Enviar información a ambos jugadores
                         if (_handlers.TryGetValue(opponentId, out var opponentHandler))
                         {
                             await opponentHandler.SendAsync(matchMessage);
                         }
 
-                        await handler.SendAsync(new WebSocketMessageDto
-                        {
-                            Type = "matchFound",
-                            Payload = new { opponentId = opponentId, gameId = gameSession.GameId }
-                        });
+                        await handler.SendAsync(matchMessage);
                     }
-                }
+                    }
                 else
                 {
                     _matchmakingQueue.Enqueue(handler.UserId);

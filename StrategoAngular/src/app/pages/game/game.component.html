@@ -1,5 +1,14 @@
 <div *ngFor="let row of board; let i = index" class="row">
-    <div *ngFor="let cell of row; let j = index" class="cell" [class.not-playable]="!cell.isPlayable">
-      <div *ngIf="getPieceAt(i, j)" [innerHTML]="getPieceAt(i, j)" class="piece"></div>
+    <div *ngFor="let cell of row; let j = index"
+         class="cell" 
+         [class.not-playable]="!cell.isPlayable"
+         [class.selected]="selectedPiece?.row === i && selectedPiece?.col === j"
+         (click)="handleCellClick(i, j)">
+      
+      <div *ngIf="getPieceAt(i, j)" 
+           [innerHTML]="getPieceAt(i, j)" 
+           class="piece">
+      </div>
     </div>
   </div>
+  

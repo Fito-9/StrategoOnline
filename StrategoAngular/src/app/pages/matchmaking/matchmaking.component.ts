@@ -21,18 +21,37 @@ export class MatchMakingComponent implements OnInit {
     // Verificar si el WebSocket está conectado
     if (!this.websocketService.connected$.getValue()) {
       console.log('WebSocket no está conectado. Reconectando...');
-      this.websocketService.connect(); // Intentar reconectar
+      this.websocketService.connect();
     }
 
     // Suscribirse a los mensajes de matchmaking
     this.websocketService.matchmakingMessage$.subscribe(message => {
       if (message?.type === 'matchFound') {
-        this.matchFound = message.payload;
+        if (!this.matchFound) {
+          this.matchFound = {}; // Asegúrate de que no sea null
+        }
+        this.matchFound.gameId = message.payload.gameId.toString();
         this.waitingMessage = '';
+    
+        const currentUserId = Number(localStorage.getItem('UserId'));
+        console.log("Mi ID:", currentUserId);
+console.log("Player1 ID:", this.matchFound.player1Id);
+console.log("Player2 ID:", this.matchFound.player2Id);
+
+        if (currentUserId === message.payload.player1Id) {
+          localStorage.setItem('playerType', 'Player1');
+          localStorage.setItem('playerName', 'Jugador'+currentUserId);;
+        } else {
+          localStorage.setItem('playerType', 'Player2');
+          localStorage.setItem('playerName', 'Jugador'+currentUserId);
+        }
+    
+        console.log(`Partida encontrada. Eres ${localStorage.getItem('playerType')}`);
       } else if (message?.type === 'waitingForMatch') {
         this.waitingMessage = message.payload;
       }
     });
+    
   }
 
   buscarPartida(): void {
