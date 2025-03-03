@@ -1,45 +1,73 @@
-.cell {
-    width: 50px;
-    height: 50px;
-    border: 1px solid #000;
+.game-container {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    background-color: #f0f0f0;
-  }
-  
-  .not-playable {
-    background-color: #a5c8e1; /* Color para lagos */
-  }
-  
-  .piece {
-    font-size: 24px;
-    display: flex;
     justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .player1 {
-    color: red;
-  }
-  
-  .player2 {
-    color: blue;
-  }
-  
-  .board {
-    display: grid;
-    grid-template-columns: repeat(10, 50px);
-    grid-template-rows: repeat(10, 50px);
-    gap: 1px;
-    background-color: #333;
-    padding: 5px;
-    border-radius: 5px;
-    margin: 20px auto;
+    margin: 20px;
+    padding: 10px;
+    background-color: #f2e6c4;
+    border-radius: 15px;
+    border: 4px solid #8b6c42;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   }
   
   .row {
     display: flex;
+    justify-content: center;
   }
+  
+  .cell {
+    width: 60px; /* Aumenta el tamaño de las celdas */
+    height: 60px;
+    margin: 3px;
+    border: 2px solid #5e3b1b;
+    background-color: #e8d3a9;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center; /* Centra verticalmente */
+    justify-content: center; /* Centra horizontalmente */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .cell:hover {
+    background-color: #d4b880;
+    transform: scale(1.05);
+  }
+  
+  .cell.not-playable {
+    background-color: #c7b495;
+    border-color: #8b6944;
+    cursor: not-allowed;
+  }
+  
+  .cell.selected {
+    background-color: #f4de8c;
+    border-color: #d4a035;
+    animation: glow 0.8s infinite alternate;
+  }
+  
+  @keyframes glow {
+    0% {
+      box-shadow: 0 0 10px #ffdf70;
+    }
+    100% {
+      box-shadow: 0 0 20px #ffdf70;
+    }
+  }
+  
+  .cell.selectable {
+    background-color: #d3b572;
+    border-color: #d4af37;
+  }
+  
+  /* Íconos más grandes y centrados */
+  .piece {
+    font-size: 24px; /* Ajusta el tamaño del icono */
+    color: #502d16;
+    font-weight: bold;
+    font-family: 'Garamond', serif;
+    user-select: none;
+  }
+  

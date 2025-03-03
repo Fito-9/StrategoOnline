@@ -21,6 +21,4 @@ export class GameService {
       ToCol: toCol
     });
   }
-  
-  
 }

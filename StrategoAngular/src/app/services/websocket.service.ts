@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
 import { BehaviorSubject } from 'rxjs';
@@ -16,6 +15,7 @@ export class WebsocketService {
   public connected$ = new BehaviorSubject<boolean>(false);
   public onlineUsers$ = new BehaviorSubject<Set<number>>(new Set());
   public matchmakingMessage$ = new BehaviorSubject<any>(null);
+  public gameUpdate$ = new BehaviorSubject<any>(null); // Nuevo BehaviorSubject para actualizaciones del juego
 
   constructor(private http: HttpClient) {}
 
@@ -72,6 +72,8 @@ export class WebsocketService {
     console.log('Mensaje recibido:', message);
     try {
       const parsed = JSON.parse(message);
+      console.log('Tipo de mensaje:', parsed.type);
+  
       switch (parsed.type) {
         case 'onlineUsers':
           const userIds: number[] = parsed.payload;
@@ -86,11 +88,17 @@ export class WebsocketService {
           console.log('Esperando oponente:', parsed.payload);
           this.matchmakingMessage$.next(parsed);
           break;
+        case 'gameUpdate':
+          console.log('Actualización del juego recibida:', parsed.payload);
+          // Importante: usar next() para notificar a los suscriptores
+          this.gameUpdate$.next(parsed.payload);
+          break;
         default:
           console.log('Mensaje de tipo desconocido:', parsed);
       }
     } catch (error) {
       console.error('Error parseando mensaje JSON:', error);
+      console.error('Mensaje original:', message);
     }
   }
 
@@ -119,6 +127,7 @@ export class WebsocketService {
       console.error("Error obteniendo usuarios conectados:", error);
     });
   }
+  
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 5000; // 5 segundos
@@ -134,4 +143,4 @@ export class WebsocketService {
       console.error('Número máximo de intentos de reconexión alcanzado.');
     }
   }
-  }
+} 

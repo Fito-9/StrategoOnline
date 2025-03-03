@@ -10,11 +10,11 @@ namespace StrategoBackend.WebSockets
         private readonly Dictionary<int, WebSocketHandler> _handlers = new Dictionary<int, WebSocketHandler>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly Queue<int> _matchmakingQueue = new Queue<int>();
-        private readonly IServiceProvider _serviceProvider; // Inyectamos IServiceProvider
+        private readonly IServiceProvider _serviceProvider;
 
         public WebSocketNetwork(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider; // Guardamos la referencia
+            _serviceProvider = serviceProvider;
         }
 
         public async Task HandleAsync(WebSocket webSocket, int userId)
@@ -80,7 +80,7 @@ namespace StrategoBackend.WebSockets
 
                 if (_handlers.ContainsKey(opponentId))
                 {
-                    using (var scope = _serviceProvider.CreateScope()) // Crear scope para GameManagerService
+                    using (var scope = _serviceProvider.CreateScope())
                     {
                         var gameManagerService = scope.ServiceProvider.GetRequiredService<GameManagerService>();
                         var gameSession = gameManagerService.MatchPlayers(opponentId, handler.UserId);
@@ -105,7 +105,7 @@ namespace StrategoBackend.WebSockets
 
                         await handler.SendAsync(matchMessage);
                     }
-                    }
+                }
                 else
                 {
                     _matchmakingQueue.Enqueue(handler.UserId);
@@ -128,7 +128,6 @@ namespace StrategoBackend.WebSockets
 
             _semaphore.Release();
         }
-
 
         private void RemoveFromMatchmakingQueue(int userId)
         {
@@ -161,7 +160,6 @@ namespace StrategoBackend.WebSockets
             await Task.WhenAll(tasks);
             _semaphore.Release();
         }
-
         public List<int> GetConnectedUsers()
         {
             return _handlers.Keys.ToList();
@@ -170,6 +168,36 @@ namespace StrategoBackend.WebSockets
         public bool IsUserConnected(int userId)
         {
             return _handlers.ContainsKey(userId);
+        }
+    
+    // Método para enviar un mensaje a un usuario específico
+    public async Task SendMessageToUser(int userId, string messageType, object payload)
+        {
+            await _semaphore.WaitAsync();
+            try
+            {
+                if (_handlers.TryGetValue(userId, out var handler))
+                {
+                    var message = new WebSocketMessageDto
+                    {
+                        Type = messageType,
+                        Payload = payload
+                    };
+                    await handler.SendAsync(message);
+                }
+                else
+                {
+                    Console.WriteLine($"Usuario {userId} no está conectado actualmente.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al enviar mensaje al usuario {userId}: {ex.Message}");
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
     }
 }

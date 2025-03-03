@@ -2,12 +2,13 @@
 {
     public List<List<PieceInfoDto>> Board { get; set; }
     public string Status { get; set; }
+    public string CurrentTurn { get; set; }
 }
 
 public class PieceInfoDto
 {
-    public string Type { get; set; }      
-    public string PieceName { get; set; } 
-    public string PlayerName { get; set; }
-    public bool IsPlayable { get; set; }  
+    public string type { get; set; }
+    public string pieceName { get; set; }
+    public string playerName { get; set; }
+    public bool isPlayable { get; set; }
 }

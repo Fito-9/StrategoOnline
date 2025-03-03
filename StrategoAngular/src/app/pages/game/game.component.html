@@ -1,14 +1,21 @@
-<div *ngFor="let row of board; let i = index" class="row">
-    <div *ngFor="let cell of row; let j = index"
-         class="cell" 
-         [class.not-playable]="!cell.isPlayable"
-         [class.selected]="selectedPiece?.row === i && selectedPiece?.col === j"
-         (click)="handleCellClick(i, j)">
-      
-      <div *ngIf="getPieceAt(i, j)" 
-           [innerHTML]="getPieceAt(i, j)" 
-           class="piece">
+<div class="game-container">
+    <div class="status-message">
+      <p [ngClass]="{'my-turn': isMyTurn, 'waiting': !isMyTurn}">{{ message }}</p>
+    </div>
+  
+    <div *ngFor="let row of board; let i = index" class="row">
+      <div *ngFor="let cell of row; let j = index"
+           class="cell" 
+           [class.not-playable]="!cell.isPlayable"
+           [class.selected]="selectedPiece?.row === i && selectedPiece?.col === j"
+           [class.selectable]="cell?.playerName === getPlayerName() && isMyTurn"
+
+           (click)="handleCellClick(i, j)">
+        
+           <div *ngIf="getPieceAt(i, j)" [innerHTML]="getPieceAt(i, j)" class="piece"></div>
+
+        </div>
       </div>
     </div>
-  </div>
+
   

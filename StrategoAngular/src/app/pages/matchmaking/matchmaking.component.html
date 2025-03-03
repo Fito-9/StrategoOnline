@@ -1,5 +1,5 @@
     <div class="matchmaking-container">
-        <h2 class="title">Sala del Torneo</h2>
+        <h2 class="title">Búsqueda de partida</h2>
         <button class="btn" (click)="buscarPartida()">¡Unirme a la Batalla!</button>
     
         <div *ngIf="waitingMessage" class="message">
@@ -12,6 +12,6 @@
         </div>
     
         <!-- File: matchmaking.component.html -->
-    <app-game *ngIf="matchFound" [gameId]="matchFound.gameId.toString()"></app-game>>
+    <app-game *ngIf="matchFound" [gameId]="matchFound.gameId.toString()"></app-game>
     </div>
     
