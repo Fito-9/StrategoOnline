@@ -1,0 +1,82 @@
+.matchmaking-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    margin: 20px auto;
+    background: linear-gradient(to bottom, #d6c7a2, #b59f85);
+    border: 4px solid #8b6c42;
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    max-width: 500px;
+    font-family: 'Luminari', 'Garamond', serif;
+    color: #4f331a;
+    text-align: center;
+  }
+  
+  /* Estilo del título medieval */
+  .matchmaking-container h2 {
+    font-size: 28px;
+    color: #553d20;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px #d4af37;
+    border-bottom: 2px solid #8b6c42;
+    display: inline-block;
+    padding-bottom: 5px;
+  }
+  
+  /* Botón medieval */
+  .matchmaking-container .btn {
+    padding: 12px 25px;
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #8b6c42;
+    color: #ffffff;
+    border: 3px solid #c89d5b;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Garamond', serif;
+  }
+  
+  .matchmaking-container .btn:hover {
+    background-color: #6f5732;
+    border-color: #a57a44;
+    transform: scale(1.1);
+  }
+  
+  .matchmaking-container .btn:active {
+    background-color: #5a4529;
+    transform: scale(0.95);
+  }
+  
+  /* Mensajes de espera */
+  .matchmaking-container .message {
+    margin-top: 15px;
+    font-size: 16px;
+    background: #fff8dc;
+    border: 2px solid #b89a5e;
+    border-radius: 10px;
+    padding: 10px 15px;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+    color: #6b4d25;
+    font-style: italic;
+  }
+  
+  /* Información de la partida */
+  .matchmaking-container .match-info {
+    margin-top: 20px;
+    background: #ece3cc;
+    border: 2px solid #a87c40;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 16px;
+    color: #4b3318;
+    font-family: 'Garamond', serif;
+  }
+  

@@ -1,5 +1,4 @@
-﻿
-using StrategoBackend.Models.Database.Entities;
+﻿using StrategoBackend.Models.Database.Entities;
 using System.IO.Pipelines;
 using System.Numerics;
 using System.Security.AccessControl;
@@ -12,10 +11,16 @@ namespace StrategoBackend.Game
         public List<Piece> player1Lost, player2Lost;
         public Grid initialGrid;
 
+        // Agregamos la propiedad para controlar el turno.
+        public SpaceType currentTurn { get; set; }
+
         public StrategoGame(Player p1, Player p2)
         {
             initPlayerPieces(p1, p2);
             initGrid();
+            SetupDefaultPositions();  // Colocar piezas por defecto
+            // Inicializamos el turno, por ejemplo, para que empiece el Player1.
+            currentTurn = SpaceType.Player1;
         }
 
         private void initPlayerPieces(Player p1, Player p2)
@@ -23,7 +28,6 @@ namespace StrategoBackend.Game
             player1Pieces = new List<Piece>();
             player2Pieces = new List<Piece>();
 
-     
             player1Pieces.Add(new Piece(piecesTypes.Marshal, p1));
             player1Pieces.Add(new Piece(piecesTypes.General, p1));
             player1Pieces.Add(new Piece(piecesTypes.Spy, p1));
@@ -65,19 +69,52 @@ namespace StrategoBackend.Game
             return true;
         }
 
+        // Método para colocar las piezas por defecto en el tablero
+        public void SetupDefaultPositions()
+        {
+            // Colocar piezas de Player2 en filas 0 a 3
+            int index2 = 0;
+            for (int row = 0; row < 4 && index2 < player2Pieces.Count; row++)
+            {
+                for (int col = 0; col < 10 && index2 < player2Pieces.Count; col++)
+                {
+                    if (initialGrid.mainGrid[row, col]._type == SpaceType.Player2 && initialGrid.mainGrid[row, col]._isPlayable)
+                    {
+                        initialGrid.mainGrid[row, col]._piece = player2Pieces[index2++];
+                    }
+                }
+            }
+
+            // Colocar piezas de Player1 en filas 6 a 9
+            int index1 = 0;
+            for (int row = 6; row < 10 && index1 < player1Pieces.Count; row++)
+            {
+                for (int col = 0; col < 10 && index1 < player1Pieces.Count; col++)
+                {
+                    if (initialGrid.mainGrid[row, col]._type == SpaceType.Player1 && initialGrid.mainGrid[row, col]._isPlayable)
+                    {
+                        initialGrid.mainGrid[row, col]._piece = player1Pieces[index1++];
+                    }
+                }
+            }
+        }
+
         // Calcula los movimientos posibles para una pieza, devolviendo la lista de posiciones y un código.
         public List<Position> getMoves(Position pos, out int returnCode)
         {
             List<Position> listPos = new List<Position>();
             GridSpace gs = initialGrid.mainGrid[pos.row, pos.col];
 
+            Console.WriteLine($"[getMoves] Posición origen: ({pos.row}, {pos.col})");
+            Console.WriteLine($"[getMoves] Pieza en la celda: {(gs._piece != null ? gs._piece.pieceName.ToString() : "Ninguna")}");
+            Console.WriteLine($"[getMoves] Celda jugable: {gs._isPlayable}");
+
             if (gs._piece != null && gs._isPlayable)
             {
                 if (gs._piece.pieceCanMove)
                 {
                     int max = gs._piece.pieceCanRun ? 10 : 1;
-
-                    // Posiciones hacia abajo
+                    // Movimientos hacia abajo
                     for (int i = pos.row + 1; i < pos.row + max + 1; i++)
                     {
                         if (i > 9 || !initialGrid.mainGrid[i, pos.col]._isPlayable) break;
@@ -87,8 +124,7 @@ namespace StrategoBackend.Game
                         listPos.Add(new Position { row = i, col = pos.col });
                         if (initialGrid.mainGrid[i, pos.col]._piece != null) break;
                     }
-
-                    // Posiciones hacia arriba
+                    // Movimientos hacia arriba
                     for (int i = pos.row - 1; i > pos.row - max - 1; i--)
                     {
                         if (i < 0 || !initialGrid.mainGrid[i, pos.col]._isPlayable) break;
@@ -98,8 +134,7 @@ namespace StrategoBackend.Game
                         listPos.Add(new Position { row = i, col = pos.col });
                         if (initialGrid.mainGrid[i, pos.col]._piece != null) break;
                     }
-
-                    // Posiciones hacia la izquierda
+                    // Movimientos hacia la izquierda
                     for (int i = pos.col - 1; i > pos.col - max - 1; i--)
                     {
                         if (i < 0 || !initialGrid.mainGrid[pos.row, i]._isPlayable) break;
@@ -109,8 +144,7 @@ namespace StrategoBackend.Game
                         listPos.Add(new Position { row = pos.row, col = i });
                         if (initialGrid.mainGrid[pos.row, i]._piece != null) break;
                     }
-
-                    // Posiciones hacia la derecha
+                    // Movimientos hacia la derecha
                     for (int i = pos.col + 1; i < pos.col + max + 1; i++)
                     {
                         if (i > 9 || !initialGrid.mainGrid[pos.row, i]._isPlayable) break;
@@ -125,12 +159,20 @@ namespace StrategoBackend.Game
                 }
                 else
                 {
-                    returnCode = 20; // La pieza no puede moverse
+                    Console.WriteLine("[getMoves] La pieza no puede moverse.");
+                    returnCode = 20;
                 }
             }
             else
             {
-                returnCode = 30; // No hay pieza en la posición
+                Console.WriteLine("[getMoves] No hay pieza en la celda o la celda no es jugable.");
+                returnCode = 30;
+            }
+
+            Console.WriteLine("[getMoves] Movimientos válidos:");
+            foreach (Position p in listPos)
+            {
+                Console.WriteLine($"    ({p.row}, {p.col})");
             }
             return listPos;
         }
@@ -153,62 +195,104 @@ namespace StrategoBackend.Game
             return true;
         }
 
-        // Realiza un movimiento, evaluando el resultado según las reglas de enfrentamiento.
         public int movePiece(Position now, Position next)
         {
+            Console.WriteLine($"[movePiece] Intento de mover pieza desde ({now.row}, {now.col}) hacia ({next.row}, {next.col})");
             bool isAllowed = false;
             int returnValue;
             Piece nowPiece = initialGrid.mainGrid[now.row, now.col]._piece;
             Piece nextPiece = initialGrid.mainGrid[next.row, next.col]._piece;
 
-            foreach (Position p in getMoves(now, out returnValue))
+            // Mostrar información de la pieza que se quiere mover
+            Console.WriteLine($"[movePiece] Pieza a mover: {(nowPiece != null ? nowPiece.pieceName.ToString() : "Ninguna")}");
+
+            // Verificar que la pieza corresponda al turno actual.
+            if (nowPiece == null || nowPiece.piecePlayer.playerType != currentTurn)
             {
+                Console.WriteLine("[movePiece] No es el turno de este jugador.");
+                return 5; // Código para "no es tu turno"
+            }
+
+            List<Position> validMoves = getMoves(now, out returnValue);
+            Console.WriteLine($"[movePiece] Código de retorno de getMoves: {returnValue}");
+
+            foreach (Position p in validMoves)
+            {
+                Console.WriteLine($"[movePiece] Movimiento permitido: ({p.row}, {p.col})");
                 if (p == next)
                     isAllowed = true;
             }
-            if (!isAllowed) return 0;
 
+            if (!isAllowed)
+            {
+                Console.WriteLine("[movePiece] Movimiento no permitido: la posición destino no está entre los movimientos válidos.");
+                return 0;
+            }
+
+            int result = 0;
             if (nextPiece == null)
             {
+                Console.WriteLine("[movePiece] Movimiento a celda vacía.");
                 updateMoveGrid(now, next);
-                return 1;
+                result = 1;
             }
             else
             {
+                Console.WriteLine($"[movePiece] Celda destino contiene pieza: {nextPiece.pieceName}");
                 if (nextPiece.piecePlayer.playerType != nowPiece.piecePlayer.playerType)
                 {
-                    if (nextPiece.pieceName == piecesTypes.Flag) return 50;
-                    if (nextPiece.pieceName == piecesTypes.Bomb && nowPiece.pieceName == piecesTypes.Miner)
+                    if (nextPiece.pieceName == piecesTypes.Flag)
                     {
+                        Console.WriteLine("[movePiece] Captura de bandera.");
                         updateWinGrid(now, next);
-                        return 10;
+                        result = 50;
                     }
-                    if (nextPiece.pieceName == piecesTypes.Marshal && nowPiece.pieceName == piecesTypes.Spy)
+                    else if (nextPiece.pieceName == piecesTypes.Bomb && nowPiece.pieceName == piecesTypes.Miner)
                     {
+                        Console.WriteLine("[movePiece] Desactivación de bomba por Minero.");
                         updateWinGrid(now, next);
-                        return 10;
+                        result = 10;
                     }
-                    if ((int)nextPiece.pieceName == (int)nowPiece.pieceName)
+                    else if (nextPiece.pieceName == piecesTypes.Marshal && nowPiece.pieceName == piecesTypes.Spy)
                     {
+                        Console.WriteLine("[movePiece] Victoria del Espía contra el Mariscal.");
+                        updateWinGrid(now, next);
+                        result = 10;
+                    }
+                    else if ((int)nextPiece.pieceName == (int)nowPiece.pieceName)
+                    {
+                        Console.WriteLine("[movePiece] Empate entre piezas iguales.");
                         updateTieGrid(now, next);
-                        return 20;
+                        result = 20;
                     }
-                    if ((int)nextPiece.pieceName > (int)nowPiece.pieceName)
+                    else if ((int)nextPiece.pieceName > (int)nowPiece.pieceName)
                     {
+                        Console.WriteLine("[movePiece] Derrota: pieza enemiga de mayor rango.");
                         updateLoseGrid(now, next);
-                        return 30;
+                        result = 30;
                     }
                     else
                     {
+                        Console.WriteLine("[movePiece] Victoria: pieza enemiga de menor rango.");
                         updateWinGrid(now, next);
-                        return 10;
+                        result = 10;
                     }
                 }
                 else
                 {
-                    return 4; // Mismo equipo (no debería ocurrir)
+                    Console.WriteLine("[movePiece] Movimiento inválido: intento de mover sobre una pieza propia.");
+                    return 4;
                 }
             }
+
+            // Si el movimiento se realizó correctamente, cambiamos el turno.
+            if (result == 1 || result == 10 || result == 20 || result == 30 || result == 50)
+            {
+                currentTurn = (currentTurn == SpaceType.Player1) ? SpaceType.Player2 : SpaceType.Player1;
+                Console.WriteLine("[movePiece] Turno cambiado a: " + currentTurn.ToString());
+            }
+
+            return result;
         }
 
         private void updateMoveGrid(Position p1, Position p2)
@@ -218,7 +302,6 @@ namespace StrategoBackend.Game
         }
         private void updateWinGrid(Position p1, Position p2)
         {
-            // Se podría agregar lógica para agregar la pieza a la lista de perdidas
             initialGrid.mainGrid[p2.row, p2.col]._piece = initialGrid.mainGrid[p1.row, p1.col]._piece;
             initialGrid.mainGrid[p1.row, p1.col]._piece = null;
         }
@@ -233,4 +316,3 @@ namespace StrategoBackend.Game
         }
     }
 }
-
