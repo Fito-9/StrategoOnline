@@ -16,7 +16,6 @@
         <button 
           class="cell-button" 
           [ngClass]="getCellClass(rowIndex, colIndex)"
-          [innerHTML]="getPieceAt(rowIndex, colIndex)"
           (click)="handleCellClick(rowIndex, colIndex)">
         </button>
       </div>
@@ -39,7 +38,7 @@
     <div class="current-piece" *ngIf="currentPieceIndex < pieces.length">
       <p>Current piece to place: {{pieces[currentPieceIndex].pieceName}}</p>
     </div>
-    <button (click)="nextPiece()" class="next-piece-btn">Next piece</button>
+ 
     
     <!-- List of remaining pieces -->
     <div class="pieces-remaining">

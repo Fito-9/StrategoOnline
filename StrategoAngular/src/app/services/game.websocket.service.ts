@@ -1,10 +1,8 @@
-
 import { Injectable } from '@angular/core';
 import { WebSocketSubject, webSocket } from 'rxjs/webSocket';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -13,10 +11,11 @@ import { Subject } from 'rxjs';
 export class WebsocketService {
   private socket$: WebSocketSubject<string> | null = null;
   private connectedUsers: Set<number> = new Set();
-  public gameMessage$ = new Subject<any>();
+
   public connected$ = new BehaviorSubject<boolean>(false);
   public onlineUsers$ = new BehaviorSubject<Set<number>>(new Set());
   public matchmakingMessage$ = new BehaviorSubject<any>(null);
+  public gameMessage$ = new Subject<any>(); // Nuevo Subject para eventos de juego
 
   constructor(private http: HttpClient) {}
 
@@ -68,6 +67,7 @@ export class WebsocketService {
       this.connected$.next(false);
     }
   }
+
   private handleMessage(message: string): void {
     console.log('Mensaje recibido:', message);
     try {
@@ -86,7 +86,7 @@ export class WebsocketService {
           console.log('Esperando oponente:', parsed.payload);
           this.matchmakingMessage$.next(parsed);
           break;
-        // Añadir estos casos para eventos de juego:
+        // Manejar eventos de juego
         case 'gameEvent':
         case 'pieceMoved':
         case 'piecePlaced':
@@ -97,8 +97,8 @@ export class WebsocketService {
           break;
         default:
           console.log('Mensaje de tipo desconocido:', parsed);
-          // Intentar detectar eventos de juego genéricos:
-          if (parsed.gameId || (parsed.payload && parsed.payload.gameId)) {
+          // Intentar manejar mensajes de juego sin tipo específico
+          if (parsed.gameId) {
             console.log('Posible evento de juego detectado:', parsed);
             this.gameMessage$.next(parsed);
           }
@@ -133,6 +133,7 @@ export class WebsocketService {
       console.error("Error obteniendo usuarios conectados:", error);
     });
   }
+  
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 5000; // 5 segundos
@@ -148,45 +149,46 @@ export class WebsocketService {
       console.error('Número máximo de intentos de reconexión alcanzado.');
     }
   }
+  
   /**
- * Envía un mensaje personalizado a través del WebSocket
- * @param message El mensaje a enviar (puede ser un objeto o string)
- */
-public sendCustomMessage(message: any): void {
-  if (!this.socket$ || !this.connected$.getValue()) {
-    console.warn('WebSocket no está conectado, no se puede enviar mensaje personalizado');
-    return;
+   * Envía un mensaje personalizado a través del WebSocket
+   * @param message El mensaje a enviar (puede ser un objeto o string)
+   */
+  public sendCustomMessage(message: any): void {
+    if (!this.socket$ || !this.connected$.getValue()) {
+      console.warn('WebSocket no está conectado, no se puede enviar mensaje personalizado');
+      return;
+    }
+    
+    // Si es un objeto, lo convertimos a string
+    const messageString = typeof message === 'string' ? message : JSON.stringify(message);
+    
+    // Enviamos el mensaje
+    this.socket$.next(messageString);
+    console.log('Mensaje personalizado enviado:', message);
   }
-  
-  // Si es un objeto, lo convertimos a string
-  const messageString = typeof message === 'string' ? message : JSON.stringify(message);
-  
-  // Enviamos el mensaje
-  this.socket$.next(messageString);
-  console.log('Mensaje personalizado enviado:', message);
-}
 
-/**
- * CÓMO USAR EL MÉTODO AÑADIDO:
- * 
- * En GameComponent:
- * 
- * // Enviar evento de juego
- * sendGameEvent(eventType: string, data: any): void {
- *   if (this.websocketService.connected$.getValue()) {
- *     const message = {
- *       type: 'gameEvent',
- *       payload: {
- *         eventType: eventType,
- *         gameId: this.gameId,
- *         playerId: this.playerId,
- *         ...data
- *       }
- *     };
- *     
- *     this.websocketService.sendCustomMessage(message);
- *     console.log(`Evento de juego enviado: ${eventType}`, data);
- *   }
- * }
- */
+  /**
+   * Método específico para enviar eventos relacionados con el juego
+   * @param event Objeto con información del evento
+   */
+  public sendGameEvent(event: any): void {
+    if (!this.socket$ || !this.connected$.getValue()) {
+      console.warn('WebSocket no está conectado, no se puede enviar evento de juego');
+      this.connect(); // Intentar reconectar
+      return;
+    }
+    
+    const message = {
+      type: 'gameEvent',
+      payload: {
+        ...event,
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+    // Enviar usando el método de envío general
+    this.sendCustomMessage(message);
+    console.log('Evento de juego enviado:', event);
   }
+}
