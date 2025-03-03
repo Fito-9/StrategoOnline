@@ -50,7 +50,7 @@ import { WebsocketService } from './websocket.service';
     }
 
     async getUsers(): Promise<Result<User[]>> {
-      return this.api.get<User[]>(`${this.URL}/api/User`);
+      return this.api.get<User[]>(`${this.URL}api/User`);
     }
     
 
