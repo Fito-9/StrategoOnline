@@ -164,16 +164,16 @@ export class GameComponent implements OnInit, OnDestroy {
     let icon = '';
     switch (cell.pieceName) {
       case 'Marshal': icon = '⭐'; break;
-      case 'General': icon = 'G'; break;
-      case 'Colonel': icon = 'C'; break;
-      case 'Major': icon = 'M'; break;
-      case 'Captain': icon = 'CA'; break;
-      case 'Lieutenant': icon = 'L'; break;
-      case 'Sergeant': icon = 'S'; break;
+      case 'General': icon = '👑'; break;
+      case 'Colonel': icon = '⚔️'; break;
+      case 'Major': icon = '🎖️'; break;
+      case 'Captain': icon = '🛡️'; break;
+      case 'Lieutenant': icon = '⚓'; break;
+      case 'Sergeant': icon = '🗡️'; break;
       case 'Miner': icon = '⛏️'; break;
-      case 'Scout': icon = 's'; break;
+      case 'Scout': icon = '🏃'; break;
       case 'Spy': icon = '🕵️'; break;
-      case 'Bomb': icon = 'b'; break;
+      case 'Bomb': icon = '💣'; break;
       case 'Flag': icon = '🏁'; break;
       default: icon = '?'; break;
     }

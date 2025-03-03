@@ -28,15 +28,15 @@ export class MatchMakingComponent implements OnInit {
     this.websocketService.matchmakingMessage$.subscribe(message => {
       if (message?.type === 'matchFound') {
         if (!this.matchFound) {
-          this.matchFound = {}; // Asegúrate de que no sea null
+          this.matchFound = {};
         }
         this.matchFound.gameId = message.payload.gameId.toString();
         this.waitingMessage = '';
     
         const currentUserId = Number(localStorage.getItem('UserId'));
         console.log("Mi ID:", currentUserId);
-console.log("Player1 ID:", this.matchFound.player1Id);
-console.log("Player2 ID:", this.matchFound.player2Id);
+        console.log("Player1 ID:", this.matchFound.player1Id);
+        console.log("Player2 ID:", this.matchFound.player2Id);
 
         if (currentUserId === message.payload.player1Id) {
           localStorage.setItem('playerType', 'Player1');
@@ -55,13 +55,13 @@ console.log("Player2 ID:", this.matchFound.player2Id);
   }
 
   buscarPartida(): void {
-    // Verificar nuevamente si el WebSocket está conectado antes de solicitar matchmaking
+    // Verificar nuevamente si el WebSocket está conectado antes de empezar el matchmaking
     if (!this.websocketService.connected$.getValue()) {
       console.log('WebSocket no está conectado. Reconectando...');
       this.websocketService.connect();
     }
 
-    // Solicitar matchmaking
+    // Empezar matchmaking
     this.websocketService.requestMatchmaking();
   }
 }

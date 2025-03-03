@@ -2,20 +2,35 @@
     <div class="status-message">
       <p [ngClass]="{'my-turn': isMyTurn, 'waiting': !isMyTurn}">{{ message }}</p>
     </div>
-  
-    <div *ngFor="let row of board; let i = index" class="row">
-      <div *ngFor="let cell of row; let j = index"
-           class="cell" 
-           [class.not-playable]="!cell.isPlayable"
-           [class.selected]="selectedPiece?.row === i && selectedPiece?.col === j"
-           [class.selectable]="cell?.playerName === getPlayerName() && isMyTurn"
-
-           (click)="handleCellClick(i, j)">
-        
-           <div *ngIf="getPieceAt(i, j)" [innerHTML]="getPieceAt(i, j)" class="piece"></div>
-
+    
+    <div class="board-container">
+      <div *ngFor="let row of board; let i = index" class="row">
+        <div *ngFor="let cell of row; let j = index"
+             class="cell" 
+             [class.not-playable]="!cell.isPlayable"
+             [class.selected]="selectedPiece?.row === i && selectedPiece?.col === j"
+             [class.selectable]="cell?.playerName === getPlayerName() && isMyTurn"
+             (click)="handleCellClick(i, j)">
+          <div *ngIf="getPieceAt(i, j)" [innerHTML]="getPieceAt(i, j)" class="piece"></div>
         </div>
       </div>
+      <div class="legend-container">
+        <h3 class="legend-title">Leyenda</h3>
+        <ul class="legend-list">
+          <li><span class="icon">⭐</span> Marshal - Valor: 10</li>
+          <li><span class="icon">👑</span> General - Valor: 9</li>
+          <li><span class="icon">⚔️</span> Coronel - Valor: 8</li>
+          <li><span class="icon">🎖️</span> Mayor - Valor: 7</li>
+          <li><span class="icon">🛡️</span> Capitán - Valor: 6</li>
+          <li><span class="icon">⚓</span> Teniente - Valor: 5</li>
+          <li><span class="icon">🗡️</span> Sargento - Valor: 4</li>
+          <li><span class="icon">⛏️</span> Minero - Valor: 3</li>
+          <li><span class="icon">🏃</span> Explorador - Valor: 2</li>
+          <li><span class="icon">🕵️</span> Espía - Valor: 1</li>
+          <li><span class="icon">💣</span> Bomba - Valor: --</li>
+          <li><span class="icon">🏁</span> Bandera - Valor: --</li>
+        </ul>
+      </div>
     </div>
-
+  </div>
   
