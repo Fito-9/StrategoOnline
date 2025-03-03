@@ -1,0 +1,40 @@
+<div class="profile-container">
+    <!-- Mensaje de error si no se puede cargar el perfil -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+  
+    <!-- Mostrar los datos del perfil -->
+    <div *ngIf="profile && !errorMessage" class="profile-details">
+      <h2>Perfil de Usuario</h2>
+      
+      <div class="profile-field">
+        <label for="profile-nickname">Nickname:</label>
+        <p id="profile-nickname">{{ profile.nickname }}</p>
+      </div>
+  
+      <div class="profile-field">
+        <label for="profile-email">Email:</label>
+        <p id="profile-email">{{ profile.email }}</p>
+      </div>
+  
+      <div class="profile-field">
+        <label for="profile-password">Contraseña:</label>
+        <p id="profile-password">{{ profile.password ? '********' : 'No establecida' }}</p>
+      </div>
+  
+      <div *ngIf="profile.avatarUrl" class="profile-avatar">
+        <label for="profile-avatar">Avatar:</label>
+        <img [src]="profile.avatarUrl" alt="Avatar del usuario" class="avatar-image">
+      </div>
+  
+      <div *ngIf="!profile.avatarUrl" class="profile-avatar">
+        <label for="profile-avatar">Avatar:</label>
+        <p>No disponible</p>
+      </div>
+  
+      <!-- Mostrar botón para actualizar el perfil si es necesario -->
+      <button class="update-profile-btn" (click)="updateProfile()">Actualizar perfil</button>
+    </div>
+  </div>
+  

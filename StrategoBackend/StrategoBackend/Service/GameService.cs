@@ -45,6 +45,7 @@ namespace StrategoBackend.Service
             return session.Game.setPieceOnGrid(piece, pos);
         }
 
+        // Obtener el estado del juego
         public GameStateDto GetGameState(Guid gameId)
         {
             if (!_games.TryGetValue(gameId, out var session)) return null;
@@ -63,8 +64,7 @@ namespace StrategoBackend.Service
                 for (int c = 0; c < 10; c++)
                 {
                     var gs = session.Game.initialGrid.mainGrid[r, c];
-
-                    row.Add(new PieceInfoDto
+                    var pieceInfo = new PieceInfoDto
                     {
                         type = gs._type.ToString(),
                         isPlayable = gs._isPlayable,
@@ -73,7 +73,7 @@ namespace StrategoBackend.Service
                     };
                     row.Add(pieceInfo);
                 }
-                boardRep.Add(row);  
+                boardRep.Add(row);
             }
 
             return new GameStateDto
@@ -84,8 +84,6 @@ namespace StrategoBackend.Service
             };
         }
 
-
-
         // Mover una pieza en el tablero
         public int MovePiece(Guid gameId, MovePieceDto request)
         {
@@ -95,13 +93,19 @@ namespace StrategoBackend.Service
             int result = session.Game.movePiece(from, to);
 
             // Si el movimiento fue exitoso, notificar a los jugadores
-            if (result == 1 || result == 10 || result == 20 || result == 30 || result == 50)
+            if (result == 1 || result == 10 || result == 20 || result == 30)
             {
                 NotifyGameUpdate(session);
+            }
+            else if (result == 50) // Captura de bandera
+            {
+                NotifyGameUpdate(session);
+                HandleFlagCapture(gameId);
             }
 
             return result;
         }
+
 
         // Notificar a los jugadores de cambios en el juego
         private void NotifyGameUpdate(GameSession session)
@@ -118,6 +122,33 @@ namespace StrategoBackend.Service
             _webSocketNetwork.SendMessageToUser(session.Player1Id, "gameUpdate", payload);
             _webSocketNetwork.SendMessageToUser(session.Player2Id, "gameUpdate", payload);
         }
+
+        public void HandleFlagCapture(Guid gameId)
+        {
+            if (_games.TryGetValue(gameId, out var session))
+            {
+                // Determinar el ganador basado en qué jugador capturó la bandera
+                var winnerPlayerType = session.Game.currentTurn == SpaceType.Player1
+                    ? SpaceType.Player2
+                    : SpaceType.Player1;
+
+                // Notificar a los jugadores sobre el fin del juego
+                var payload = new
+                {
+                    gameId = session.GameId,
+                    status = "Fin del juego",
+                    winner = winnerPlayerType.ToString(),
+                    reason = "Bandera capturada"
+                };
+
+                _webSocketNetwork.SendMessageToUser(session.Player1Id, "gameEnd", payload);
+                _webSocketNetwork.SendMessageToUser(session.Player2Id, "gameEnd", payload);
+
+                //Eliminar la partida de la lista de juegos activos
+                EndGame(gameId);
+            }
+        }
+
 
         // Eliminar una partida
         public bool EndGame(Guid gameId)
