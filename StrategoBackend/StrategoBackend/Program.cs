@@ -32,15 +32,21 @@ builder.Services.AddSingleton(provider =>
     };
 });
 
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowAngular",
+        policy => policy.WithOrigins("https://stratego-angular.vercel.app")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
+
+var app = builder.Build();
+
+app.UseCors("AllowAngular");
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
 
 builder.Services.AddAuthentication().AddJwtBearer();
 
