@@ -1,5 +1,65 @@
-<div *ngFor="let row of board; let i = index" class="row">
-    <div *ngFor="let cell of row; let j = index" class="cell" [class.not-playable]="!cell.isPlayable">
-      <div *ngIf="getPieceAt(i, j)" [innerHTML]="getPieceAt(i, j)" class="piece"></div>
+<div class="game-container">
+  <!-- Game information -->
+  <div class="game-info">
+    <h2>Stratego</h2>
+    <p *ngIf="gamePhase === 'setup'">Setup phase: Place your pieces</p>
+    <p *ngIf="gamePhase === 'play'">
+      Game phase: Player {{currentPlayer}}'s turn
+      <span *ngIf="currentPlayer === playerId" class="turn-indicator">(Your turn!)</span>
+    </p>
+  </div>
+
+  <!-- Game board -->
+  <div class="board" *ngIf="board && board.length > 0">
+    <div class="board-row" *ngFor="let row of board; let rowIndex = index">
+      <div class="board-cell" *ngFor="let cell of row; let colIndex = index">
+        <button 
+          class="cell-button" 
+          [ngClass]="getCellClass(rowIndex, colIndex)"
+          [innerHTML]="getPieceAt(rowIndex, colIndex)"
+          (click)="handleCellClick(rowIndex, colIndex)">
+        </button>
+      </div>
     </div>
   </div>
+
+  <div *ngIf="!board || board.length === 0" class="loading">
+    Loading game...
+  </div>
+
+  <!-- Currently selected piece -->
+  <div *ngIf="gamePhase === 'play' && selectedPiece" class="selected-piece-info">
+    <p>Selected piece: {{selectedPiece.pieceName}} at position ({{selectedPiece.row}}, {{selectedPiece.col}})</p>
+  </div>
+
+  <!-- Setup phase information -->
+  <div *ngIf="gamePhase === 'setup'" class="setup-info">
+    <h3>Setup Phase</h3>
+    <p>Place your pieces on the board. Click on a cell in your area to place the next piece.</p>
+    <div class="current-piece" *ngIf="currentPieceIndex < pieces.length">
+      <p>Current piece to place: {{pieces[currentPieceIndex].pieceName}}</p>
+    </div>
+    <button (click)="nextPiece()" class="next-piece-btn">Next piece</button>
+    
+    <!-- List of remaining pieces -->
+    <div class="pieces-remaining">
+      <h4>Remaining pieces to place:</h4>
+      <div class="pieces-grid">
+        <div *ngFor="let piece of pieces" class="piece-item" [class.placed]="piece.isPlaced">
+          {{getPieceIcon(piece.pieceName)}} {{piece.pieceName}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game phase information -->
+  <div *ngIf="gamePhase === 'play'" class="play-info">
+    <h3>Instructions</h3>
+    <ul>
+      <li>Click on one of your pieces to select it</li>
+      <li>Highlighted cells show valid moves</li>
+      <li>Click on a highlighted cell to move your piece</li>
+      <li>To deselect a piece, click on it again</li>
+    </ul>
+  </div>
+</div>

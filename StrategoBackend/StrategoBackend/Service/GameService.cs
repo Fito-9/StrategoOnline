@@ -43,10 +43,10 @@ namespace StrategoBackend.Service
             return session.Game.setPieceOnGrid(piece, pos);
         }
 
-        // Obtener el estado del juego
         public GameStateDto GetGameState(Guid gameId)
         {
             if (!_games.TryGetValue(gameId, out var session)) return null;
+
             var boardRep = new List<List<PieceInfoDto>>();
 
             for (int r = 0; r < 10; r++)
@@ -55,20 +55,22 @@ namespace StrategoBackend.Service
                 for (int c = 0; c < 10; c++)
                 {
                     var gs = session.Game.initialGrid.mainGrid[r, c];
-                    var pieceInfo = new PieceInfoDto
+
+                    row.Add(new PieceInfoDto
                     {
                         Type = gs._type.ToString(),
                         IsPlayable = gs._isPlayable,
-                        PieceName = gs._piece != null ? gs._piece.pieceName.ToString() : "None",
-                        PlayerName = gs._piece != null ? gs._piece.piecePlayer.name : ""
-                    };
-                    row.Add(pieceInfo);
+                        PieceName = gs._piece?.pieceName.ToString(), // Puede ser null si no hay pieza
+                        PlayerName = gs._piece?.piecePlayer?.name // Puede ser null si no hay jugador
+                    });
                 }
                 boardRep.Add(row);
             }
 
             return new GameStateDto { Board = boardRep, Status = "Partida en curso" };
         }
+
+
 
         // Mover una pieza en el tablero
         public int MovePiece(Guid gameId, MovePieceDto request)
